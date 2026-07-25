@@ -1,3 +1,5 @@
+import { PagePlaceholder } from "../components/PagePlaceholder";
+
 export function OrganizationsPage() {
-  return <h1 className="text-2xl font-semibold">Organizations Page</h1>;
+  return <PagePlaceholder title="Organizations" />;
 }

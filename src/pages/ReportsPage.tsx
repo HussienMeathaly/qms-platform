@@ -1,3 +1,5 @@
+import { PagePlaceholder } from "../components/PagePlaceholder";
+
 export function ReportsPage() {
-  return <h1 className="text-2xl font-semibold">Reports Page</h1>;
+  return <PagePlaceholder title="Reports" />;
 }

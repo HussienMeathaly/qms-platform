@@ -1,3 +1,5 @@
+import { PagePlaceholder } from "../components/PagePlaceholder";
+
 export function ReviewsPage() {
-  return <h1 className="text-2xl font-semibold">Reviews Page</h1>;
+  return <PagePlaceholder title="Reviews" />;
 }
