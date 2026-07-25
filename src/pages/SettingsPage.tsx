@@ -1,3 +1,5 @@
+import { PagePlaceholder } from "../components/PagePlaceholder";
+
 export function SettingsPage() {
-  return <h1 className="text-2xl font-semibold">Settings Page</h1>;
+  return <PagePlaceholder title="Settings" />;
 }
