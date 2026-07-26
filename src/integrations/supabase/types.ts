@@ -23,7 +23,21 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      assessment_status:
+        | "draft"
+        | "in_progress"
+        | "submitted"
+        | "under_review"
+        | "revision_requested"
+        | "resubmitted"
+        | "approved"
+        | "closed"
+      framework_status: "draft" | "published" | "archived"
+      organization_role: "org_admin" | "org_contributor" | "viewer"
+      organization_status: "active" | "inactive"
+      platform_role: "platform_admin" | "consultant"
+      response_status: "draft" | "completed"
+      review_decision: "pending" | "approved" | "revision_requested"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +164,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      assessment_status: [
+        "draft",
+        "in_progress",
+        "submitted",
+        "under_review",
+        "revision_requested",
+        "resubmitted",
+        "approved",
+        "closed",
+      ],
+      framework_status: ["draft", "published", "archived"],
+      organization_role: ["org_admin", "org_contributor", "viewer"],
+      organization_status: ["active", "inactive"],
+      platform_role: ["platform_admin", "consultant"],
+      response_status: ["draft", "completed"],
+      review_decision: ["pending", "approved", "revision_requested"],
+    },
   },
 } as const
