@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DashboardPage } from "../pages/DashboardPage";
+import { DashboardPage } from "../../pages/DashboardPage";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Dashboard — QMS" },

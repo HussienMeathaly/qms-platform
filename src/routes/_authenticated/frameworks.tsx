@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FrameworksPage } from "../pages/FrameworksPage";
+import { FrameworksPage } from "../../pages/FrameworksPage";
 
-export const Route = createFileRoute("/frameworks")({
+export const Route = createFileRoute("/_authenticated/frameworks")({
   head: () => ({
     meta: [
       { title: "Frameworks — QMS" },
