@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { OrganizationsPage } from "../pages/OrganizationsPage";
+import { OrganizationsPage } from "../../pages/OrganizationsPage";
 
-export const Route = createFileRoute("/organizations")({
+export const Route = createFileRoute("/_authenticated/organizations")({
   head: () => ({
     meta: [
       { title: "Organizations — QMS" },
