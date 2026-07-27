@@ -1,4 +1,4 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   LayoutDashboard,
@@ -11,8 +11,11 @@ import {
   Menu,
   X,
   ShieldCheck,
+  LogOut,
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { useQueryClient } from "@tanstack/react-query";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -70,6 +73,16 @@ export function AppLayout({ children }: { children?: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const title = useCurrentTitle();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await signOut();
+    navigate({ to: "/auth", replace: true });
+  }
 
   useEffect(() => {
     setMobileOpen(false);
@@ -143,6 +156,21 @@ export function AppLayout({ children }: { children?: ReactNode }) {
             <h2 className="truncate text-sm font-semibold text-foreground">{title}</h2>
             <p className="truncate text-xs text-muted-foreground">Quality Management System</p>
           </div>
+          {user && (
+            <div className="flex items-center gap-3">
+              <span className="hidden truncate text-xs text-muted-foreground sm:inline max-w-[180px]">
+                {user.email}
+              </span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+              >
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+                Sign out
+              </button>
+            </div>
+          )}
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="mx-auto w-full max-w-7xl">{children ?? <Outlet />}</div>
