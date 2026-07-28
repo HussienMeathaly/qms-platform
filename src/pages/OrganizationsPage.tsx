@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "../components/PagePlaceholder";
+import { OrganizationsView } from "@/features/organizations/OrganizationsView";
 
 export function OrganizationsPage() {
-  return <PagePlaceholder title="Organizations" />;
+  return <OrganizationsView />;
 }
