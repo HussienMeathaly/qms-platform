@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "../components/PagePlaceholder";
+import { FrameworksView } from "@/features/frameworks/FrameworksView";
 
 export function FrameworksPage() {
-  return <PagePlaceholder title="Frameworks" />;
+  return <FrameworksView />;
 }
