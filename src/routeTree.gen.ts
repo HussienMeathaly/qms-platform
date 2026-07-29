@@ -16,6 +16,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated/reviews'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedPrinciplesRouteImport } from './routes/_authenticated/principles'
 import { Route as AuthenticatedOrganizationsRouteImport } from './routes/_authenticated/organizations'
 import { Route as AuthenticatedLevelsRouteImport } from './routes/_authenticated/levels'
 import { Route as AuthenticatedFrameworksRouteImport } from './routes/_authenticated/frameworks'
@@ -56,6 +57,11 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPrinciplesRoute = AuthenticatedPrinciplesRouteImport.update({
+  id: '/principles',
+  path: '/principles',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOrganizationsRoute =
   AuthenticatedOrganizationsRouteImport.update({
     id: '/organizations',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/frameworks': typeof AuthenticatedFrameworksRoute
   '/levels': typeof AuthenticatedLevelsRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
+  '/principles': typeof AuthenticatedPrinciplesRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/reviews': typeof AuthenticatedReviewsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/frameworks': typeof AuthenticatedFrameworksRoute
   '/levels': typeof AuthenticatedLevelsRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
+  '/principles': typeof AuthenticatedPrinciplesRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/reviews': typeof AuthenticatedReviewsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/_authenticated/frameworks': typeof AuthenticatedFrameworksRoute
   '/_authenticated/levels': typeof AuthenticatedLevelsRoute
   '/_authenticated/organizations': typeof AuthenticatedOrganizationsRoute
+  '/_authenticated/principles': typeof AuthenticatedPrinciplesRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/reviews': typeof AuthenticatedReviewsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/frameworks'
     | '/levels'
     | '/organizations'
+    | '/principles'
     | '/reports'
     | '/reviews'
     | '/settings'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/frameworks'
     | '/levels'
     | '/organizations'
+    | '/principles'
     | '/reports'
     | '/reviews'
     | '/settings'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/_authenticated/frameworks'
     | '/_authenticated/levels'
     | '/_authenticated/organizations'
+    | '/_authenticated/principles'
     | '/_authenticated/reports'
     | '/_authenticated/reviews'
     | '/_authenticated/settings'
@@ -226,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/principles': {
+      id: '/_authenticated/principles'
+      path: '/principles'
+      fullPath: '/principles'
+      preLoaderRoute: typeof AuthenticatedPrinciplesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/organizations': {
       id: '/_authenticated/organizations'
       path: '/organizations'
@@ -270,6 +289,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFrameworksRoute: typeof AuthenticatedFrameworksRoute
   AuthenticatedLevelsRoute: typeof AuthenticatedLevelsRoute
   AuthenticatedOrganizationsRoute: typeof AuthenticatedOrganizationsRoute
+  AuthenticatedPrinciplesRoute: typeof AuthenticatedPrinciplesRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedReviewsRoute: typeof AuthenticatedReviewsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -282,6 +302,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFrameworksRoute: AuthenticatedFrameworksRoute,
   AuthenticatedLevelsRoute: AuthenticatedLevelsRoute,
   AuthenticatedOrganizationsRoute: AuthenticatedOrganizationsRoute,
+  AuthenticatedPrinciplesRoute: AuthenticatedPrinciplesRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedReviewsRoute: AuthenticatedReviewsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
