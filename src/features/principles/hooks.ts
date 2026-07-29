@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  countPrincipleRequirements,
   createPrinciple,
   deletePrinciple,
   listPrinciples,
@@ -14,6 +15,7 @@ import type {
 
 const KEY = "principles";
 const LEVEL_KEY = "principles_levels_options";
+const DEP_KEY = "principles_requirements_count";
 
 export function usePrinciples(params: ListPrinciplesParams) {
   return useQuery({
@@ -29,6 +31,17 @@ export function useLevelOptions(enabled: boolean) {
     queryFn: () => listSelectableLevels(),
     enabled,
     staleTime: 30_000,
+  });
+}
+
+export function usePrincipleRequirementCount(principleId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: [DEP_KEY, principleId],
+    queryFn: () => {
+      if (!principleId) return Promise.resolve(0);
+      return countPrincipleRequirements(principleId);
+    },
+    enabled: Boolean(principleId) && enabled,
   });
 }
 
