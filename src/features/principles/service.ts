@@ -26,6 +26,10 @@ function versionsTable() {
   return appSchema().from("framework_versions");
 }
 
+function requirementsTable() {
+  return appSchema().from("requirements");
+}
+
 const SELECT_COLS =
   "id, level_id, code, display_name, description, sort_order, created_at, updated_at, level:levels!fk_principles_level(id, code, display_name, sort_order, framework_version:framework_versions!fk_levels_framework_version(id, version_number, version_name, status, framework:frameworks!fk_framework_versions_framework(id, code, name)))";
 
@@ -192,6 +196,19 @@ export async function updatePrinciple(id: string, input: PrincipleUpdateInput): 
 export async function deletePrinciple(id: string): Promise<void> {
   const { error } = await principlesTable().delete().eq("id", id);
   if (error) throw error;
+}
+
+/**
+ * Count dependent Requirements referencing this Principle. Used as a mandatory
+ * safety check before deletion, independent of the ON DELETE CASCADE that
+ * exists on the foreign key.
+ */
+export async function countPrincipleRequirements(principleId: string): Promise<number> {
+  const { count, error } = await requirementsTable()
+    .select("id", { count: "exact", head: true })
+    .eq("principle_id", principleId);
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export function friendlyPrincipleError(err: unknown): string {

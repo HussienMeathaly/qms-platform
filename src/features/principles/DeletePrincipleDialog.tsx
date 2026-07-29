@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AlertTriangle, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Principle } from "./types";
-import { useDeletePrinciple } from "./hooks";
+import { useDeletePrinciple, usePrincipleRequirementCount } from "./hooks";
 import { friendlyPrincipleError } from "./service";
 
 type Props = {
@@ -13,15 +13,22 @@ type Props = {
 
 export function DeletePrincipleDialog({ open, onOpenChange, principle }: Props) {
   const del = useDeletePrinciple();
+  const deps = usePrincipleRequirementCount(principle?.id, open);
   const [error, setError] = useState<string | null>(null);
 
   if (!open || !principle) return null;
 
   const busy = del.isPending;
+  const loadingDeps = deps.isLoading;
+  const depError = deps.isError;
+  const depCount = deps.data ?? 0;
+  const hasDeps = depCount > 0;
 
   async function handleDelete() {
     if (!principle) return;
     setError(null);
+    // Safety guard: block deletion when Requirements exist or dependency status is unknown.
+    if (hasDeps || loadingDeps || depError) return;
     try {
       await del.mutateAsync(principle.id);
       toast.success("Principle deleted");
@@ -55,12 +62,29 @@ export function DeletePrincipleDialog({ open, onOpenChange, principle }: Props) 
             </div>
             <div>
               <h2 id="del-pr-title" className="text-base font-semibold text-foreground">
-                Delete principle
+                {hasDeps ? "Cannot delete Principle" : "Delete principle"}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                This will permanently remove{" "}
-                <span className="font-medium text-foreground">{label}</span>. Any dependent
-                Requirements will be removed by the database (cascade). This action cannot be undone.
+                {loadingDeps ? (
+                  <>
+                    Checking dependencies for{" "}
+                    <span className="font-medium text-foreground">{label}</span>…
+                  </>
+                ) : depError ? (
+                  <>Couldn't verify dependent Requirements. Retry the check before deleting.</>
+                ) : hasDeps ? (
+                  <>
+                    <span className="font-medium text-foreground">{label}</span> has {depCount}{" "}
+                    dependent Requirement{depCount === 1 ? "" : "s"} and cannot be deleted.
+                    Remove or reassign the dependent Requirements first.
+                  </>
+                ) : (
+                  <>
+                    This will permanently remove{" "}
+                    <span className="font-medium text-foreground">{label}</span>. This action cannot
+                    be undone.
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -87,17 +111,30 @@ export function DeletePrincipleDialog({ open, onOpenChange, principle }: Props) 
             disabled={busy}
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-60"
           >
-            Cancel
+            {hasDeps ? "Close" : "Cancel"}
           </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={busy}
-            className="inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-60"
-          >
-            {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Delete principle
-          </button>
+          {depError && (
+            <button
+              type="button"
+              onClick={() => deps.refetch()}
+              disabled={busy || deps.isFetching}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-60"
+            >
+              {deps.isFetching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Retry check
+            </button>
+          )}
+          {!hasDeps && !depError && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={busy || loadingDeps}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-60"
+            >
+              {(busy || loadingDeps) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Delete principle
+            </button>
+          )}
         </div>
       </div>
     </div>
