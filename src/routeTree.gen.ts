@@ -18,6 +18,7 @@ import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedOrganizationsRouteImport } from './routes/_authenticated/organizations'
 import { Route as AuthenticatedFrameworksRouteImport } from './routes/_authenticated/frameworks'
+import { Route as AuthenticatedFrameworkVersionsRouteImport } from './routes/_authenticated/framework-versions'
 import { Route as AuthenticatedAssessmentsRouteImport } from './routes/_authenticated/assessments'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
@@ -65,6 +66,12 @@ const AuthenticatedFrameworksRoute = AuthenticatedFrameworksRouteImport.update({
   path: '/frameworks',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFrameworkVersionsRoute =
+  AuthenticatedFrameworkVersionsRouteImport.update({
+    id: '/framework-versions',
+    path: '/framework-versions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAssessmentsRoute =
   AuthenticatedAssessmentsRouteImport.update({
     id: '/assessments',
@@ -77,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/assessments': typeof AuthenticatedAssessmentsRoute
+  '/framework-versions': typeof AuthenticatedFrameworkVersionsRoute
   '/frameworks': typeof AuthenticatedFrameworksRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -87,6 +95,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/assessments': typeof AuthenticatedAssessmentsRoute
+  '/framework-versions': typeof AuthenticatedFrameworkVersionsRoute
   '/frameworks': typeof AuthenticatedFrameworksRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -100,6 +109,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/_authenticated/assessments': typeof AuthenticatedAssessmentsRoute
+  '/_authenticated/framework-versions': typeof AuthenticatedFrameworkVersionsRoute
   '/_authenticated/frameworks': typeof AuthenticatedFrameworksRoute
   '/_authenticated/organizations': typeof AuthenticatedOrganizationsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/unauthorized'
     | '/assessments'
+    | '/framework-versions'
     | '/frameworks'
     | '/organizations'
     | '/reports'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/unauthorized'
     | '/assessments'
+    | '/framework-versions'
     | '/frameworks'
     | '/organizations'
     | '/reports'
@@ -136,6 +148,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/unauthorized'
     | '/_authenticated/assessments'
+    | '/_authenticated/framework-versions'
     | '/_authenticated/frameworks'
     | '/_authenticated/organizations'
     | '/_authenticated/reports'
@@ -215,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFrameworksRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/framework-versions': {
+      id: '/_authenticated/framework-versions'
+      path: '/framework-versions'
+      fullPath: '/framework-versions'
+      preLoaderRoute: typeof AuthenticatedFrameworkVersionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/assessments': {
       id: '/_authenticated/assessments'
       path: '/assessments'
@@ -227,6 +247,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssessmentsRoute: typeof AuthenticatedAssessmentsRoute
+  AuthenticatedFrameworkVersionsRoute: typeof AuthenticatedFrameworkVersionsRoute
   AuthenticatedFrameworksRoute: typeof AuthenticatedFrameworksRoute
   AuthenticatedOrganizationsRoute: typeof AuthenticatedOrganizationsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -237,6 +258,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssessmentsRoute: AuthenticatedAssessmentsRoute,
+  AuthenticatedFrameworkVersionsRoute: AuthenticatedFrameworkVersionsRoute,
   AuthenticatedFrameworksRoute: AuthenticatedFrameworksRoute,
   AuthenticatedOrganizationsRoute: AuthenticatedOrganizationsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
@@ -256,13 +278,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
