@@ -1,8 +1,7 @@
+import { Link } from "@tanstack/react-router";
 import { AlertCircle, ClipboardList, RefreshCw } from "lucide-react";
 import { useMyAssessments } from "./hooks";
 import { friendlyMyAssessmentError } from "./service";
-
-const WORKSPACE_NOTICE = "Assessment workspace will be available in the next task.";
 
 export function MyAssessmentsView() {
   const query = useMyAssessments();
@@ -75,22 +74,18 @@ export function MyAssessmentsView() {
                       {r.completed_count} / {r.total_count} ({r.progress}%)
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        disabled
-                        title={WORKSPACE_NOTICE}
-                        className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                      <Link
+                        to="/my-assessments/$assessmentId"
+                        params={{ assessmentId: r.assessment_id }}
+                        className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                       >
                         {r.completed_count > 0 ? "Continue Assessment" : "Start Assessment"}
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-              {WORKSPACE_NOTICE}
-            </p>
           </div>
         )}
       </div>
