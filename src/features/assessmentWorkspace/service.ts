@@ -36,7 +36,7 @@ type RawRow = {
       id: string;
       code: string | null;
       title: string;
-      description: string | null;
+      guidance: string | null;
       sort_order: number;
       principle: {
         code: string | null;
@@ -92,7 +92,7 @@ export async function loadWorkspace(
         id: req.id,
         code: req.code,
         title: req.title,
-        description: req.description ?? null,
+        description: req.guidance ?? null,
         sort_order: req.sort_order ?? 0,
         level_code: req.principle?.level?.code ?? null,
         level_name: req.principle?.level?.display_name ?? "",
