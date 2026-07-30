@@ -1,14 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { MyAssessmentsPage } from "../../pages/MyAssessmentsPage";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/my-assessments")({
-  head: () => ({
-    meta: [
-      { title: "My Assessments — QMS" },
-      { name: "description", content: "Assessments assigned to you." },
-      { property: "og:title", content: "My Assessments — QMS" },
-      { property: "og:description", content: "Assessments assigned to you." },
-    ],
-  }),
-  component: MyAssessmentsPage,
+  component: MyAssessmentsLayout,
 });
+
+function MyAssessmentsLayout() {
+  return <Outlet />;
+}
