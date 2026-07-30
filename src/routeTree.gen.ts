@@ -17,6 +17,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated/reviews'
 import { Route as AuthenticatedRequirementsRouteImport } from './routes/_authenticated/requirements'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedProcessClausesRouteImport } from './routes/_authenticated/process-clauses'
 import { Route as AuthenticatedPrinciplesRouteImport } from './routes/_authenticated/principles'
 import { Route as AuthenticatedOrganizationsRouteImport } from './routes/_authenticated/organizations'
 import { Route as AuthenticatedLevelsRouteImport } from './routes/_authenticated/levels'
@@ -65,6 +66,12 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProcessClausesRoute =
+  AuthenticatedProcessClausesRouteImport.update({
+    id: '/process-clauses',
+    path: '/process-clauses',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPrinciplesRoute = AuthenticatedPrinciplesRouteImport.update({
   id: '/principles',
   path: '/principles',
@@ -116,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/levels': typeof AuthenticatedLevelsRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
   '/principles': typeof AuthenticatedPrinciplesRoute
+  '/process-clauses': typeof AuthenticatedProcessClausesRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/requirements': typeof AuthenticatedRequirementsRoute
   '/reviews': typeof AuthenticatedReviewsRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/levels': typeof AuthenticatedLevelsRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
   '/principles': typeof AuthenticatedPrinciplesRoute
+  '/process-clauses': typeof AuthenticatedProcessClausesRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/requirements': typeof AuthenticatedRequirementsRoute
   '/reviews': typeof AuthenticatedReviewsRoute
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/levels': typeof AuthenticatedLevelsRoute
   '/_authenticated/organizations': typeof AuthenticatedOrganizationsRoute
   '/_authenticated/principles': typeof AuthenticatedPrinciplesRoute
+  '/_authenticated/process-clauses': typeof AuthenticatedProcessClausesRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/requirements': typeof AuthenticatedRequirementsRoute
   '/_authenticated/reviews': typeof AuthenticatedReviewsRoute
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/organizations'
     | '/principles'
+    | '/process-clauses'
     | '/reports'
     | '/requirements'
     | '/reviews'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/organizations'
     | '/principles'
+    | '/process-clauses'
     | '/reports'
     | '/requirements'
     | '/reviews'
@@ -200,6 +212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/levels'
     | '/_authenticated/organizations'
     | '/_authenticated/principles'
+    | '/_authenticated/process-clauses'
     | '/_authenticated/reports'
     | '/_authenticated/requirements'
     | '/_authenticated/reviews'
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/process-clauses': {
+      id: '/_authenticated/process-clauses'
+      path: '/process-clauses'
+      fullPath: '/process-clauses'
+      preLoaderRoute: typeof AuthenticatedProcessClausesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/principles': {
       id: '/_authenticated/principles'
       path: '/principles'
@@ -331,6 +351,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLevelsRoute: typeof AuthenticatedLevelsRoute
   AuthenticatedOrganizationsRoute: typeof AuthenticatedOrganizationsRoute
   AuthenticatedPrinciplesRoute: typeof AuthenticatedPrinciplesRoute
+  AuthenticatedProcessClausesRoute: typeof AuthenticatedProcessClausesRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedRequirementsRoute: typeof AuthenticatedRequirementsRoute
   AuthenticatedReviewsRoute: typeof AuthenticatedReviewsRoute
@@ -346,6 +367,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLevelsRoute: AuthenticatedLevelsRoute,
   AuthenticatedOrganizationsRoute: AuthenticatedOrganizationsRoute,
   AuthenticatedPrinciplesRoute: AuthenticatedPrinciplesRoute,
+  AuthenticatedProcessClausesRoute: AuthenticatedProcessClausesRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedRequirementsRoute: AuthenticatedRequirementsRoute,
   AuthenticatedReviewsRoute: AuthenticatedReviewsRoute,
@@ -364,13 +386,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
