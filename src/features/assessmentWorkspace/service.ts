@@ -17,7 +17,7 @@ export class AssessmentNotFoundError extends Error {
 const PRINCIPLE_EMBED =
   "principle:principles!fk_requirements_principle(id, code, display_name, sort_order, level:levels!fk_principles_level(id, code, display_name, sort_order))";
 
-const CRITERION_EMBED = `criterion:assessment_criteria!fk_responses_criterion(id, code, criterion_text, help_text, sort_order, requirement:requirements!fk_assessment_criteria_requirement(id, code, title, description, sort_order, ${PRINCIPLE_EMBED}))`;
+const CRITERION_EMBED = `criterion:assessment_criteria!fk_responses_criterion(id, code, criterion_text, help_text, sort_order, requirement:requirements!fk_assessment_criteria_requirement(id, code, title, guidance, sort_order, ${PRINCIPLE_EMBED}))`;
 
 const ASSESSMENT_EMBED =
   "assessment:assessments!fk_responses_assessment(id, status, organization:organizations!fk_assessments_organization(name), framework_version:framework_versions!fk_assessments_framework_version(version_number, framework:frameworks!fk_framework_versions_framework(code, name)))";
