@@ -23,6 +23,7 @@ import { Route as AuthenticatedLevelsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedFrameworksRouteImport } from './routes/_authenticated/frameworks'
 import { Route as AuthenticatedFrameworkVersionsRouteImport } from './routes/_authenticated/framework-versions'
 import { Route as AuthenticatedAssessmentsRouteImport } from './routes/_authenticated/assessments'
+import { Route as AuthenticatedAssessmentCriteriaRouteImport } from './routes/_authenticated/assessment-criteria'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -97,11 +98,18 @@ const AuthenticatedAssessmentsRoute =
     path: '/assessments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAssessmentCriteriaRoute =
+  AuthenticatedAssessmentCriteriaRouteImport.update({
+    id: '/assessment-criteria',
+    path: '/assessment-criteria',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/assessment-criteria': typeof AuthenticatedAssessmentCriteriaRoute
   '/assessments': typeof AuthenticatedAssessmentsRoute
   '/framework-versions': typeof AuthenticatedFrameworkVersionsRoute
   '/frameworks': typeof AuthenticatedFrameworksRoute
@@ -116,6 +124,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/assessment-criteria': typeof AuthenticatedAssessmentCriteriaRoute
   '/assessments': typeof AuthenticatedAssessmentsRoute
   '/framework-versions': typeof AuthenticatedFrameworkVersionsRoute
   '/frameworks': typeof AuthenticatedFrameworksRoute
@@ -133,6 +142,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/_authenticated/assessment-criteria': typeof AuthenticatedAssessmentCriteriaRoute
   '/_authenticated/assessments': typeof AuthenticatedAssessmentsRoute
   '/_authenticated/framework-versions': typeof AuthenticatedFrameworkVersionsRoute
   '/_authenticated/frameworks': typeof AuthenticatedFrameworksRoute
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/unauthorized'
+    | '/assessment-criteria'
     | '/assessments'
     | '/framework-versions'
     | '/frameworks'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
   to:
     | '/auth'
     | '/unauthorized'
+    | '/assessment-criteria'
     | '/assessments'
     | '/framework-versions'
     | '/frameworks'
@@ -181,6 +193,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/unauthorized'
+    | '/_authenticated/assessment-criteria'
     | '/_authenticated/assessments'
     | '/_authenticated/framework-versions'
     | '/_authenticated/frameworks'
@@ -300,10 +313,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssessmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/assessment-criteria': {
+      id: '/_authenticated/assessment-criteria'
+      path: '/assessment-criteria'
+      fullPath: '/assessment-criteria'
+      preLoaderRoute: typeof AuthenticatedAssessmentCriteriaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAssessmentCriteriaRoute: typeof AuthenticatedAssessmentCriteriaRoute
   AuthenticatedAssessmentsRoute: typeof AuthenticatedAssessmentsRoute
   AuthenticatedFrameworkVersionsRoute: typeof AuthenticatedFrameworkVersionsRoute
   AuthenticatedFrameworksRoute: typeof AuthenticatedFrameworksRoute
@@ -318,6 +339,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAssessmentCriteriaRoute: AuthenticatedAssessmentCriteriaRoute,
   AuthenticatedAssessmentsRoute: AuthenticatedAssessmentsRoute,
   AuthenticatedFrameworkVersionsRoute: AuthenticatedFrameworkVersionsRoute,
   AuthenticatedFrameworksRoute: AuthenticatedFrameworksRoute,
@@ -342,13 +364,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
