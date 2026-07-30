@@ -26,6 +26,7 @@ import { Route as AuthenticatedFrameworksRouteImport } from './routes/_authentic
 import { Route as AuthenticatedFrameworkVersionsRouteImport } from './routes/_authenticated/framework-versions'
 import { Route as AuthenticatedAssessmentsRouteImport } from './routes/_authenticated/assessments'
 import { Route as AuthenticatedAssessmentCriteriaRouteImport } from './routes/_authenticated/assessment-criteria'
+import { Route as AuthenticatedMyAssessmentsAssessmentIdRouteImport } from './routes/_authenticated/my-assessments.$assessmentId'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -118,6 +119,12 @@ const AuthenticatedAssessmentCriteriaRoute =
     path: '/assessment-criteria',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMyAssessmentsAssessmentIdRoute =
+  AuthenticatedMyAssessmentsAssessmentIdRouteImport.update({
+    id: '/$assessmentId',
+    path: '/$assessmentId',
+    getParentRoute: () => AuthenticatedMyAssessmentsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -128,7 +135,7 @@ export interface FileRoutesByFullPath {
   '/framework-versions': typeof AuthenticatedFrameworkVersionsRoute
   '/frameworks': typeof AuthenticatedFrameworksRoute
   '/levels': typeof AuthenticatedLevelsRoute
-  '/my-assessments': typeof AuthenticatedMyAssessmentsRoute
+  '/my-assessments': typeof AuthenticatedMyAssessmentsRouteWithChildren
   '/organizations': typeof AuthenticatedOrganizationsRoute
   '/principles': typeof AuthenticatedPrinciplesRoute
   '/process-clauses': typeof AuthenticatedProcessClausesRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/requirements': typeof AuthenticatedRequirementsRoute
   '/reviews': typeof AuthenticatedReviewsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/my-assessments/$assessmentId': typeof AuthenticatedMyAssessmentsAssessmentIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -145,7 +153,7 @@ export interface FileRoutesByTo {
   '/framework-versions': typeof AuthenticatedFrameworkVersionsRoute
   '/frameworks': typeof AuthenticatedFrameworksRoute
   '/levels': typeof AuthenticatedLevelsRoute
-  '/my-assessments': typeof AuthenticatedMyAssessmentsRoute
+  '/my-assessments': typeof AuthenticatedMyAssessmentsRouteWithChildren
   '/organizations': typeof AuthenticatedOrganizationsRoute
   '/principles': typeof AuthenticatedPrinciplesRoute
   '/process-clauses': typeof AuthenticatedProcessClausesRoute
@@ -154,6 +162,7 @@ export interface FileRoutesByTo {
   '/reviews': typeof AuthenticatedReviewsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/': typeof AuthenticatedIndexRoute
+  '/my-assessments/$assessmentId': typeof AuthenticatedMyAssessmentsAssessmentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,7 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/framework-versions': typeof AuthenticatedFrameworkVersionsRoute
   '/_authenticated/frameworks': typeof AuthenticatedFrameworksRoute
   '/_authenticated/levels': typeof AuthenticatedLevelsRoute
-  '/_authenticated/my-assessments': typeof AuthenticatedMyAssessmentsRoute
+  '/_authenticated/my-assessments': typeof AuthenticatedMyAssessmentsRouteWithChildren
   '/_authenticated/organizations': typeof AuthenticatedOrganizationsRoute
   '/_authenticated/principles': typeof AuthenticatedPrinciplesRoute
   '/_authenticated/process-clauses': typeof AuthenticatedProcessClausesRoute
@@ -174,6 +183,7 @@ export interface FileRoutesById {
   '/_authenticated/reviews': typeof AuthenticatedReviewsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/my-assessments/$assessmentId': typeof AuthenticatedMyAssessmentsAssessmentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/requirements'
     | '/reviews'
     | '/settings'
+    | '/my-assessments/$assessmentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/settings'
     | '/'
+    | '/my-assessments/$assessmentId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -231,6 +243,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reviews'
     | '/_authenticated/settings'
     | '/_authenticated/'
+    | '/_authenticated/my-assessments/$assessmentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -360,8 +373,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssessmentCriteriaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/my-assessments/$assessmentId': {
+      id: '/_authenticated/my-assessments/$assessmentId'
+      path: '/$assessmentId'
+      fullPath: '/my-assessments/$assessmentId'
+      preLoaderRoute: typeof AuthenticatedMyAssessmentsAssessmentIdRouteImport
+      parentRoute: typeof AuthenticatedMyAssessmentsRoute
+    }
   }
 }
+
+interface AuthenticatedMyAssessmentsRouteChildren {
+  AuthenticatedMyAssessmentsAssessmentIdRoute: typeof AuthenticatedMyAssessmentsAssessmentIdRoute
+}
+
+const AuthenticatedMyAssessmentsRouteChildren: AuthenticatedMyAssessmentsRouteChildren =
+  {
+    AuthenticatedMyAssessmentsAssessmentIdRoute:
+      AuthenticatedMyAssessmentsAssessmentIdRoute,
+  }
+
+const AuthenticatedMyAssessmentsRouteWithChildren =
+  AuthenticatedMyAssessmentsRoute._addFileChildren(
+    AuthenticatedMyAssessmentsRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssessmentCriteriaRoute: typeof AuthenticatedAssessmentCriteriaRoute
@@ -369,7 +404,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFrameworkVersionsRoute: typeof AuthenticatedFrameworkVersionsRoute
   AuthenticatedFrameworksRoute: typeof AuthenticatedFrameworksRoute
   AuthenticatedLevelsRoute: typeof AuthenticatedLevelsRoute
-  AuthenticatedMyAssessmentsRoute: typeof AuthenticatedMyAssessmentsRoute
+  AuthenticatedMyAssessmentsRoute: typeof AuthenticatedMyAssessmentsRouteWithChildren
   AuthenticatedOrganizationsRoute: typeof AuthenticatedOrganizationsRoute
   AuthenticatedPrinciplesRoute: typeof AuthenticatedPrinciplesRoute
   AuthenticatedProcessClausesRoute: typeof AuthenticatedProcessClausesRoute
@@ -386,7 +421,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFrameworkVersionsRoute: AuthenticatedFrameworkVersionsRoute,
   AuthenticatedFrameworksRoute: AuthenticatedFrameworksRoute,
   AuthenticatedLevelsRoute: AuthenticatedLevelsRoute,
-  AuthenticatedMyAssessmentsRoute: AuthenticatedMyAssessmentsRoute,
+  AuthenticatedMyAssessmentsRoute: AuthenticatedMyAssessmentsRouteWithChildren,
   AuthenticatedOrganizationsRoute: AuthenticatedOrganizationsRoute,
   AuthenticatedPrinciplesRoute: AuthenticatedPrinciplesRoute,
   AuthenticatedProcessClausesRoute: AuthenticatedProcessClausesRoute,
