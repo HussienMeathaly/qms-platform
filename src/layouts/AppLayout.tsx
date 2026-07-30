@@ -34,6 +34,7 @@ const navItems = [
   { to: "/assessment-criteria", label: "Assessment Criteria", icon: ListChecks },
   { to: "/process-clauses", label: "Process Clauses", icon: FileText },
   { to: "/assessments", label: "Assessments", icon: ClipboardList },
+  { to: "/my-assessments", label: "My Assessments", icon: ClipboardCheck },
   { to: "/reviews", label: "Reviews", icon: CheckSquare },
   { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/settings", label: "Settings", icon: Settings },
