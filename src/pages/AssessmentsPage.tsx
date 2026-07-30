@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "../components/PagePlaceholder";
+import { AssessmentsView } from "@/features/assessments/AssessmentsView";
 
 export function AssessmentsPage() {
-  return <PagePlaceholder title="Assessments" />;
+  return <AssessmentsView />;
 }
