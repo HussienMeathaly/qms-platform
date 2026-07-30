@@ -6,6 +6,7 @@ import {
   Layers,
   GitBranch,
   Layers3,
+  ListChecks,
   ListTree,
   ClipboardList,
   ClipboardCheck,
