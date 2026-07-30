@@ -12,6 +12,7 @@ import {
   Search,
   Trash2,
   AlertCircle,
+  Users,
 } from "lucide-react";
 import { useOrganizations } from "./hooks";
 import type {
@@ -21,6 +22,7 @@ import type {
 } from "./types";
 import { OrganizationFormDialog } from "./OrganizationFormDialog";
 import { DeleteOrganizationDialog } from "./DeleteOrganizationDialog";
+import { OrganizationMembersDialog } from "./OrganizationMembersDialog";
 import { friendlyOrganizationError } from "./service";
 import { cn } from "@/lib/utils";
 
@@ -122,6 +124,7 @@ export function OrganizationsView() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Organization | null>(null);
   const [deleting, setDeleting] = useState<Organization | null>(null);
+  const [managingMembers, setManagingMembers] = useState<Organization | null>(null);
 
   const query = useOrganizations({
     search,
@@ -291,6 +294,14 @@ export function OrganizationsView() {
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
+                      onClick={() => setManagingMembers(org)}
+                      aria-label={`Manage members of ${org.name}`}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 hover:bg-accent hover:text-foreground"
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => openEdit(org)}
                       aria-label={`Edit ${org.name}`}
                       className="inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 hover:bg-accent hover:text-foreground"
@@ -324,6 +335,14 @@ export function OrganizationsView() {
                   {formatDate(org.updated_at)}
                 </div>
                 <div className="col-span-1 hidden items-center justify-end gap-1 md:flex">
+                  <button
+                    type="button"
+                    onClick={() => setManagingMembers(org)}
+                    aria-label={`Manage members of ${org.name}`}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground/70 hover:bg-accent hover:text-foreground"
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => openEdit(org)}
@@ -384,6 +403,11 @@ export function OrganizationsView() {
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}
         organization={deleting}
+      />
+      <OrganizationMembersDialog
+        open={Boolean(managingMembers)}
+        onOpenChange={(open) => !open && setManagingMembers(null)}
+        organization={managingMembers}
       />
     </div>
   );
