@@ -62,7 +62,9 @@ export function buildProgressBreakdown(requirements: WorkspaceRequirement[]) {
     const principle = principles.get(principleKey) ?? {
       key: principleKey,
       code: req.principle_code,
-      name: req.principle_name || "Unassigned Principle",
+      name: req.level_name
+        ? `${req.principle_name || "Unassigned Principle"} (${req.level_name})`
+        : req.principle_name || "Unassigned Principle",
       completed: 0,
       total: 0,
       percent: 0,
