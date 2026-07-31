@@ -40,9 +40,8 @@ export async function createOrgUserImpl(input: {
   if (created.error) {
     const msg = created.error.message ?? "";
     if (!/already/i.test(msg)) throw new Error(msg || "Could not create the user account.");
-    // User already exists — reuse the account.
+    // User already exists — reuse the account and reset its password.
     existing = true;
-    password = null;
     const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
       page: 1,
       perPage: 1000,
@@ -50,6 +49,11 @@ export async function createOrgUserImpl(input: {
     if (listErr) throw new Error(listErr.message);
     userId = list.users.find((u) => u.email?.toLowerCase() === email)?.id ?? null;
     if (!userId) throw new Error("A user with this email already exists but could not be located.");
+    const { error: updErr } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      password: password!,
+      email_confirm: true,
+    });
+    if (updErr) throw new Error(updErr.message);
   } else {
     userId = created.data.user!.id;
   }
