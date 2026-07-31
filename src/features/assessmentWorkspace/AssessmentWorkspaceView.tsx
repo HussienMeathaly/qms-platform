@@ -6,11 +6,11 @@ import { AssessmentNotFoundError, friendlyWorkspaceError } from "./service";
 import {
   buildResults,
   buildScale,
-  groupByClause,
+  buildOutline,
   requirementGradedCount,
   requirementScore,
 } from "./results";
-import { ResultsPanel } from "./ResultsPanel";
+import { ProgressSidebar } from "./ProgressSidebar";
 import type { WorkspaceRequirement } from "./types";
 
 type SaveState = { state: "saving" | "saved" | "error"; typeId: string };
@@ -27,7 +27,7 @@ export function AssessmentWorkspaceView({ assessmentId }: { assessmentId: string
   const requirements = useMemo(() => data?.requirements ?? [], [data]);
   const scale = useMemo(() => buildScale(typesQuery.data ?? []), [typesQuery.data]);
   const results = useMemo(() => buildResults(requirements, scale), [requirements, scale]);
-  const sections = useMemo(() => groupByClause(requirements), [requirements]);
+  const outline = useMemo(() => buildOutline(requirements, scale), [requirements, scale]);
 
   if (query.isPending) {
     return (
@@ -135,115 +135,92 @@ export function AssessmentWorkspaceView({ assessmentId }: { assessmentId: string
         </span>
       </header>
 
-      <div className="grid gap-6 xl:grid-cols-[210px_minmax(0,1fr)_320px]">
-        {/* Left rail */}
-        <aside className="hidden xl:block">
-          <div className="sticky top-6 space-y-4">
-            <nav>
-              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Process clauses
-              </h2>
-              <ul className="mt-3 space-y-0.5">
-                {sections.map((s) => {
-                  const graded = s.items.reduce((a, r) => a + requirementGradedCount(r), 0);
-                  const total = s.items.reduce((a, r) => a + r.criteria.length, 0);
-                  return (
-                    <li key={s.id}>
-                      <button
-                        type="button"
-                        onClick={() => scrollTo(s.id)}
-                        className="flex w-full items-start justify-between gap-2 rounded-md px-2 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent"
-                      >
-                        <span className="min-w-0">
-                          {s.code ? (
-                            <span className="mr-1 font-mono text-xs text-muted-foreground">
-                              {s.code}
-                            </span>
-                          ) : null}
-                          {s.name}
-                        </span>
-                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                          {graded}/{total}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-
-            <div className="rounded-xl border border-border bg-card p-4">
-              <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Grade scale
-              </h3>
-              <ul className="mt-3 space-y-2">
-                {scale.ordered.map((t, i) => (
-                  <li key={t.id} className="flex items-baseline gap-2 text-sm">
-                    <span className="font-mono text-xs text-muted-foreground">{i}</span>
-                    <span className="text-foreground">{t.display_name}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </aside>
-
-        {/* Center */}
-        <main className="min-w-0 space-y-8">
-          <p className="rounded-xl border-l-4 border-primary bg-card p-4 text-sm leading-relaxed text-foreground">
-            <strong className="font-semibold">Unified grading.</strong> Grade each criterion once on
-            a single scale. Every grade feeds both the process-clause results and the principle
-            results on the right. Requirements are organised by process clause; the principle each
-            one traces to is shown on its card.
-          </p>
-
-          {sections.map((section) => (
-            <section
-              key={section.id}
-              ref={(el) => {
-                sectionRefs.current[section.id] = el;
-              }}
-              className="scroll-mt-6 space-y-4"
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-primary/80 pb-2">
-                <h2 className="flex items-baseline gap-2 text-lg font-semibold text-foreground">
-                  {section.code ? (
-                    <span className="font-mono text-sm text-muted-foreground">{section.code}</span>
-                  ) : null}
-                  {section.name}
-                </h2>
-                <span className="text-xs text-muted-foreground">
-                  {section.items.length} requirement{section.items.length === 1 ? "" : "s"}
-                </span>
-              </div>
-
-              {section.items.map((req) => (
-                <RequirementCard
-                  key={req.id}
-                  req={req}
-                  scale={scale}
-                  saveByResponse={saveByResponse}
-                  onSelect={doSave}
-                  saveError={save.error}
-                />
-              ))}
-            </section>
-          ))}
-        </main>
-
-        {/* Right */}
+      <div className="grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="min-w-0">
-          <div className="sticky top-6">
-            <ResultsPanel
+          <div className="sticky top-6 max-h-[calc(100vh-3rem)] space-y-4 overflow-y-auto pr-1">
+            <ProgressSidebar
               overall={results.overall}
               band={results.band}
               graded={results.graded}
               total={results.total}
-              clauses={results.clauses}
+              levels={outline}
               principles={results.principles}
+              clauses={results.clauses}
+              onJump={scrollTo}
             />
           </div>
         </aside>
+
+        <main className="min-w-0 space-y-10">
+          <p className="rounded-xl border-l-4 border-primary bg-card p-4 text-sm leading-relaxed text-foreground">
+            <strong className="font-semibold">Unified grading.</strong> Grade each criterion once on
+            a single scale. Requirements are organised by level, then by principle; every grade
+            feeds the progress bars on the left.
+          </p>
+
+          {outline.map((level) => (
+            <section
+              key={level.key}
+              ref={(el) => {
+                sectionRefs.current[level.key] = el;
+              }}
+              className="scroll-mt-6 space-y-6"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary px-4 py-3">
+                <h2 className="flex items-baseline gap-2 text-base font-semibold text-primary-foreground">
+                  {level.code ? (
+                    <span className="font-mono text-xs opacity-80">{level.code}</span>
+                  ) : null}
+                  {level.name}
+                </h2>
+                <span className="text-xs font-medium tabular-nums text-primary-foreground/85">
+                  {level.percent === null ? "–" : `${level.percent}%`} · {level.graded}/{level.total} graded
+                </span>
+              </div>
+
+              {level.principles.map((principle) => (
+                <div
+                  key={principle.key}
+                  ref={(el) => {
+                    sectionRefs.current[principle.key] = el;
+                  }}
+                  className="scroll-mt-6 space-y-3"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-2">
+                    <h3 className="flex items-baseline gap-2 text-sm font-semibold text-foreground">
+                      {principle.code ? (
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {principle.code}
+                        </span>
+                      ) : null}
+                      {principle.name}
+                    </h3>
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {principle.graded}/{principle.total} graded
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      style={{ width: `${principle.percent ?? 0}%` }}
+                    />
+                  </div>
+
+                  {principle.items.map((req) => (
+                    <RequirementCard
+                      key={req.id}
+                      req={req}
+                      scale={scale}
+                      saveByResponse={saveByResponse}
+                      onSelect={doSave}
+                      saveError={save.error}
+                    />
+                  ))}
+                </div>
+              ))}
+            </section>
+          ))}
+        </main>
       </div>
     </div>
   );
