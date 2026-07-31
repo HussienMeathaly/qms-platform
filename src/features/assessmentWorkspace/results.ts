@@ -156,6 +156,105 @@ export function buildResults(requirements: WorkspaceRequirement[], scale: ScoreS
 }
 
 /** Requirements grouped under their primary process clause, in clause order. */
+export type PrincipleNode = ResultGroup & {
+  sort: number;
+  items: WorkspaceRequirement[];
+};
+
+export type LevelNode = ResultGroup & {
+  sort: number;
+  principles: PrincipleNode[];
+};
+
+function pct(scores: number[]) {
+  return scores.length > 0
+    ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100)
+    : null;
+}
+
+/** Levels → principles (deduped by code) → requirements, with scores on each node. */
+export function buildOutline(
+  requirements: WorkspaceRequirement[],
+  scale: ScoreScale,
+): LevelNode[] {
+  const levels = new Map<
+    string,
+    { node: LevelNode; scores: number[]; principles: Map<string, { node: PrincipleNode; scores: number[] }> }
+  >();
+
+  for (const req of requirements) {
+    const lKey = req.level_id ?? req.level_name ?? "unassigned-level";
+    let level = levels.get(lKey);
+    if (!level) {
+      level = {
+        node: {
+          key: lKey,
+          code: req.level_code,
+          name: req.level_name || "Unassigned Level",
+          percent: null,
+          graded: 0,
+          total: 0,
+          sort: req.level_sort ?? 999,
+          principles: [],
+        },
+        scores: [],
+        principles: new Map(),
+      };
+      levels.set(lKey, level);
+    }
+
+    const pKey =
+      (req.principle_code || "").trim().toLowerCase() ||
+      (req.principle_name || "").trim().toLowerCase() ||
+      "unassigned";
+    let principle = level.principles.get(pKey);
+    if (!principle) {
+      principle = {
+        node: {
+          key: `${lKey}:${pKey}`,
+          code: req.principle_code,
+          name: req.principle_name || "Unassigned Principle",
+          percent: null,
+          graded: 0,
+          total: 0,
+          sort: req.principle_sort ?? 999,
+          items: [],
+        },
+        scores: [],
+      };
+      level.principles.set(pKey, principle);
+    }
+
+    const score = requirementScore(req, scale);
+    const g = requirementGradedCount(req);
+    const t = req.criteria.length;
+    level.node.graded += g;
+    level.node.total += t;
+    principle.node.graded += g;
+    principle.node.total += t;
+    if (score !== null) {
+      level.scores.push(score);
+      principle.scores.push(score);
+    }
+    principle.node.items.push(req);
+  }
+
+  return Array.from(levels.values())
+    .map(({ node, scores, principles }) => ({
+      ...node,
+      percent: pct(scores),
+      principles: Array.from(principles.values())
+        .map(({ node: p, scores: s }) => ({
+          ...p,
+          percent: pct(s),
+          items: p.items.sort((a, b) => a.sort_order - b.sort_order),
+        }))
+        .sort((a, b) => a.sort - b.sort || (a.code ?? a.name).localeCompare(b.code ?? b.name)),
+    }))
+    .sort((a, b) => a.sort - b.sort || (a.code ?? a.name).localeCompare(b.code ?? b.name));
+}
+
+/** Requirements grouped under their primary process clause, in clause order. */
 export function groupByClause(requirements: WorkspaceRequirement[]) {
   const map = new Map<
     string,
