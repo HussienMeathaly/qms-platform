@@ -408,7 +408,7 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
               </h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {isEdit
-                  ? "Update the organization details."
+                  ? "Update the organization details and its team members."
                   : "Add the organization and its main contact in one step."}
               </p>
             </div>
