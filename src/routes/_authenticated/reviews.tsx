@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PlatformAdminOnly } from "@/features/auth/PlatformAdminOnly";
 import { ReviewsPage } from "../../pages/ReviewsPage";
 
 export const Route = createFileRoute("/_authenticated/reviews")({
@@ -10,5 +11,9 @@ export const Route = createFileRoute("/_authenticated/reviews")({
       { property: "og:description", content: "Consultant reviews." },
     ],
   }),
-  component: ReviewsPage,
+  component: () => (
+    <PlatformAdminOnly>
+      <ReviewsPage />
+    </PlatformAdminOnly>
+  ),
 });

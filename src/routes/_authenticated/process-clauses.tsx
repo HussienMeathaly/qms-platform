@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PlatformAdminOnly } from "@/features/auth/PlatformAdminOnly";
 import { ProcessClausesPage } from "../../pages/ProcessClausesPage";
 
 export const Route = createFileRoute("/_authenticated/process-clauses")({
@@ -16,5 +17,9 @@ export const Route = createFileRoute("/_authenticated/process-clauses")({
       },
     ],
   }),
-  component: ProcessClausesPage,
+  component: () => (
+    <PlatformAdminOnly>
+      <ProcessClausesPage />
+    </PlatformAdminOnly>
+  ),
 });
