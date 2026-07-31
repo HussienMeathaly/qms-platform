@@ -18,18 +18,28 @@ export type WorkspaceCriterion = {
   response_type_id: string | null;
 };
 
+export type WorkspaceProcessClause = {
+  id: string;
+  code: string | null;
+  display_name: string;
+  sort_order: number;
+};
+
 export type WorkspaceRequirement = {
   id: string;
   code: string | null;
   title: string;
   description: string | null;
   sort_order: number;
+  level_id: string | null;
   level_code: string | null;
   level_name: string;
   level_sort: number;
+  principle_id: string | null;
   principle_code: string | null;
   principle_name: string;
   principle_sort: number;
+  process_clauses: WorkspaceProcessClause[];
   criteria: WorkspaceCriterion[];
 };
 
