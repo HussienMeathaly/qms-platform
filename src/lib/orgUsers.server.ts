@@ -71,3 +71,42 @@ export async function createOrgUserImpl(input: {
 
   return { userId: userId!, tempPassword: password, existing };
 }
+
+export async function updateOrgUserImpl(input: {
+  organizationId: string;
+  userId: string;
+  fullName: string;
+  jobTitle: string | null;
+  role: Role;
+}): Promise<{ ok: true }> {
+  const { error: profileErr } = await appDb()
+    .from("user_profiles")
+    .upsert(
+      { id: input.userId, full_name: input.fullName, job_title: input.jobTitle },
+      { onConflict: "id" },
+    );
+  if (profileErr) throw new Error(profileErr.message);
+
+  const { error: memberErr } = await appDb()
+    .from("organization_members")
+    .upsert(
+      { organization_id: input.organizationId, user_id: input.userId, role: input.role },
+      { onConflict: "organization_id,user_id" },
+    );
+  if (memberErr) throw new Error(memberErr.message);
+
+  return { ok: true };
+}
+
+export async function removeOrgUserImpl(input: {
+  organizationId: string;
+  userId: string;
+}): Promise<{ ok: true }> {
+  const { error } = await appDb()
+    .from("organization_members")
+    .delete()
+    .eq("organization_id", input.organizationId)
+    .eq("user_id", input.userId);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
