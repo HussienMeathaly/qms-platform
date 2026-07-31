@@ -5,6 +5,8 @@ export type ResponseTypeOption = {
   description: string | null;
   color: string | null;
   sort_order: number;
+  /** Numeric maturity score from the database (0..3). */
+  score: number | null;
 };
 
 export type WorkspaceCriterion = {
