@@ -10,6 +10,15 @@ export type ResultGroup = {
   total: number;
 };
 
+/** Stable key for a principle, deduplicated across levels. */
+function principleKey(req: WorkspaceRequirement) {
+  return (
+    (req.principle_code || "").trim().toLowerCase() ||
+    (req.principle_name || "").trim().toLowerCase() ||
+    "unassigned"
+  );
+}
+
 export type ScoreScale = {
   index: Map<string, number>;
   max: number;
@@ -82,7 +91,7 @@ export function buildResults(requirements: WorkspaceRequirement[], scale: ScoreS
     total += req.criteria.length;
     if (score !== null) allScores.push(score);
 
-    const pKey = req.principle_id ?? req.principle_name ?? "—";
+    const pKey = principleKey(req);
     const p =
       principles.get(pKey) ??
       {
