@@ -28,8 +28,11 @@ export type ScoreScale = {
 export function buildScale(types: ResponseTypeOption[]): ScoreScale {
   const ordered = [...types].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
   const index = new Map<string, number>();
-  ordered.forEach((t, i) => index.set(t.id, i));
-  return { index, max: Math.max(ordered.length - 1, 1), ordered };
+  // Prefer the numeric score stored in the database; fall back to position.
+  ordered.forEach((t, i) => index.set(t.id, typeof t.score === "number" ? t.score : i));
+  const values = Array.from(index.values());
+  const max = values.length > 0 ? Math.max(...values) : 1;
+  return { index, max: max > 0 ? max : 1, ordered };
 }
 
 /** 0..1 score of a requirement based on its graded criteria, or null when ungraded. */
