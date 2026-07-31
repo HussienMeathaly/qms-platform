@@ -178,6 +178,60 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
             </div>
           )}
 
+          {!isEdit && (
+            <div className="space-y-3 rounded-md border border-border bg-muted/30 p-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">Assigned user</p>
+                <p className="text-xs text-muted-foreground">
+                  Optional — the person who will complete the assessment for this organization.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="org-assessor" className="text-xs font-medium text-foreground">
+                  User
+                </label>
+                <select
+                  id="org-assessor"
+                  value={assessorId}
+                  onChange={(e) => setAssessorId(e.target.value)}
+                  disabled={submitting || profilesQuery.isLoading}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                >
+                  <option value="">
+                    {profilesQuery.isLoading ? "Loading users…" : "No user assigned"}
+                  </option>
+                  {(profilesQuery.data ?? []).map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.full_name}
+                      {p.job_title ? ` — ${p.job_title}` : ""}
+                    </option>
+                  ))}
+                </select>
+                {profilesQuery.isError && (
+                  <p className="text-xs text-destructive">Unable to load users.</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="org-assessor-role" className="text-xs font-medium text-foreground">
+                  Role
+                </label>
+                <select
+                  id="org-assessor-role"
+                  value={assessorRole}
+                  onChange={(e) => setAssessorRole(e.target.value as OrganizationRole)}
+                  disabled={submitting || !assessorId}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                >
+                  {ORGANIZATION_ROLES.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
             <button
               type="button"
