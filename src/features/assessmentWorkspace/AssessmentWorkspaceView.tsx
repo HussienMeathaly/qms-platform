@@ -1,33 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  AlertCircle,
-  ArrowLeft,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  CircleDashed,
-  CircleDot,
-  CircleCheck,
-  LayoutList,
-  Loader2,
-  RefreshCw,
-} from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { AlertCircle, ArrowLeft, Check, Loader2, RefreshCw } from "lucide-react";
 import { useResponseTypes, useSaveResponse, useWorkspace } from "./hooks";
 import { AssessmentNotFoundError, friendlyWorkspaceError } from "./service";
 import {
-  buildProgressBreakdown,
-  requirementPercent,
-  requirementState,
-} from "./progress";
-import { ProgressBreakdown } from "./ProgressBreakdown";
+  buildResults,
+  buildScale,
+  groupByClause,
+  requirementGradedCount,
+  requirementScore,
+} from "./results";
+import { ResultsPanel } from "./ResultsPanel";
+import type { WorkspaceRequirement } from "./types";
 
 type SaveState = { state: "saving" | "saved" | "error"; typeId: string };
 
@@ -36,14 +20,14 @@ export function AssessmentWorkspaceView({ assessmentId }: { assessmentId: string
   const typesQuery = useResponseTypes();
   const save = useSaveResponse(assessmentId);
 
-  const [reqIndex, setReqIndex] = useState(0);
   const [saveByResponse, setSaveByResponse] = useState<Record<string, SaveState>>({});
-  const [panelOpen, setPanelOpen] = useState(false);
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   const data = query.data;
   const requirements = useMemo(() => data?.requirements ?? [], [data]);
-  const requirement = requirements[reqIndex];
-  const breakdown = useMemo(() => buildProgressBreakdown(requirements), [requirements]);
+  const scale = useMemo(() => buildScale(typesQuery.data ?? []), [typesQuery.data]);
+  const results = useMemo(() => buildResults(requirements, scale), [requirements, scale]);
+  const sections = useMemo(() => groupByClause(requirements), [requirements]);
 
   if (query.isPending) {
     return (
@@ -91,7 +75,7 @@ export function AssessmentWorkspaceView({ assessmentId }: { assessmentId: string
     );
   }
 
-  if (!data || !requirement) {
+  if (!data || requirements.length === 0) {
     return (
       <div className="mx-auto max-w-lg rounded-lg border border-border bg-card p-8 text-center">
         <p className="text-sm text-muted-foreground">
@@ -106,10 +90,6 @@ export function AssessmentWorkspaceView({ assessmentId }: { assessmentId: string
       </div>
     );
   }
-
-  const progress =
-    data.total_count > 0 ? Math.round((data.completed_count / data.total_count) * 100) : 0;
-  const reqPercent = requirementPercent(requirement);
 
   function doSave(responseId: string, typeId: string) {
     setSaveByResponse((prev) => ({ ...prev, [responseId]: { state: "saving", typeId } }));
@@ -129,266 +109,269 @@ export function AssessmentWorkspaceView({ assessmentId }: { assessmentId: string
     );
   }
 
+  function scrollTo(id: string) {
+    sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="min-w-0">
           <Link
             to="/my-assessments"
             className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> My Assessments
           </Link>
-          <h1 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
+          <h1 className="mt-2 truncate text-xl font-semibold tracking-tight text-foreground">
             {data.framework_name}
           </h1>
-          <p className="text-sm text-muted-foreground">{data.organization_name}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {data.framework_code} · Version {data.version_number}
+          <p className="truncate text-sm text-muted-foreground">
+            {data.organization_name} · {data.framework_code} · v{data.version_number}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium capitalize text-foreground">
-            {data.assessment_status.replace(/_/g, " ")}
-          </span>
-          <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
-              >
-                <LayoutList className="h-3.5 w-3.5" /> Requirements
-              </button>
-            </SheetTrigger>
-            <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-              <SheetHeader>
-                <SheetTitle>Requirements</SheetTitle>
-              </SheetHeader>
-              <div className="mt-4 space-y-2">
-                {requirements.map((r, i) => {
-                  const state = requirementState(r);
-                  const prevReq = requirements[i - 1];
-                  const newGroup =
-                    !prevReq ||
-                    prevReq.level_name !== r.level_name ||
-                    prevReq.principle_name !== r.principle_name;
+        <span className="shrink-0 self-start rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium capitalize text-foreground">
+          {data.assessment_status.replace(/_/g, " ")}
+        </span>
+      </header>
+
+      <div className="grid gap-6 xl:grid-cols-[210px_minmax(0,1fr)_320px]">
+        {/* Left rail */}
+        <aside className="hidden xl:block">
+          <div className="sticky top-6 space-y-4">
+            <nav>
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Process clauses
+              </h2>
+              <ul className="mt-3 space-y-0.5">
+                {sections.map((s) => {
+                  const graded = s.items.reduce((a, r) => a + requirementGradedCount(r), 0);
+                  const total = s.items.reduce((a, r) => a + r.criteria.length, 0);
                   return (
-                    <div key={r.id}>
-                      {newGroup && (
-                        <p className="mb-1 mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {r.level_name} · {r.principle_name}
-                        </p>
-                      )}
+                    <li key={s.id}>
                       <button
                         type="button"
-                        onClick={() => {
-                          setReqIndex(i);
-                          setPanelOpen(false);
-                        }}
-                        className={`flex w-full items-start gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-accent ${
-                          i === reqIndex ? "border-primary bg-primary/5" : "border-border"
-                        }`}
+                        onClick={() => scrollTo(s.id)}
+                        className="flex w-full items-start justify-between gap-2 rounded-md px-2 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent"
                       >
-                        {state === "completed" ? (
-                          <CircleCheck className="mt-0.5 h-4 w-4 text-primary" />
-                        ) : state === "in_progress" ? (
-                          <CircleDot className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <CircleDashed className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="flex-1">
-                          <span className="block font-medium text-foreground">
-                            {r.code ? `${r.code} — ` : ""}
-                            {r.title}
-                          </span>
-                          <span className="block text-xs text-muted-foreground">
-                            {requirementPercent(r)}% complete
-                          </span>
+                        <span className="min-w-0">
+                          {s.code ? (
+                            <span className="mr-1 font-mono text-xs text-muted-foreground">
+                              {s.code}
+                            </span>
+                          ) : null}
+                          {s.name}
+                        </span>
+                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                          {graded}/{total}
                         </span>
                       </button>
-                    </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+
+            <div className="rounded-xl border border-border bg-card p-4">
+              <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Grade scale
+              </h3>
+              <ul className="mt-3 space-y-2">
+                {scale.ordered.map((t, i) => (
+                  <li key={t.id} className="flex items-baseline gap-2 text-sm">
+                    <span className="font-mono text-xs text-muted-foreground">{i}</span>
+                    <span className="text-foreground">{t.display_name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </aside>
+
+        {/* Center */}
+        <main className="min-w-0 space-y-8">
+          <p className="rounded-xl border-l-4 border-primary bg-card p-4 text-sm leading-relaxed text-foreground">
+            <strong className="font-semibold">Unified grading.</strong> Grade each criterion once on
+            a single scale. Every grade feeds both the process-clause results and the principle
+            results on the right. Requirements are organised by process clause; the principle each
+            one traces to is shown on its card.
+          </p>
+
+          {sections.map((section) => (
+            <section
+              key={section.id}
+              ref={(el) => {
+                sectionRefs.current[section.id] = el;
+              }}
+              className="scroll-mt-6 space-y-4"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-primary/80 pb-2">
+                <h2 className="flex items-baseline gap-2 text-lg font-semibold text-foreground">
+                  {section.code ? (
+                    <span className="font-mono text-sm text-muted-foreground">{section.code}</span>
+                  ) : null}
+                  {section.name}
+                </h2>
+                <span className="text-xs text-muted-foreground">
+                  {section.items.length} requirement{section.items.length === 1 ? "" : "s"}
+                </span>
+              </div>
+
+              {section.items.map((req) => (
+                <RequirementCard
+                  key={req.id}
+                  req={req}
+                  scale={scale}
+                  saveByResponse={saveByResponse}
+                  onSelect={doSave}
+                  saveError={save.error}
+                />
+              ))}
+            </section>
+          ))}
+        </main>
+
+        {/* Right */}
+        <aside className="min-w-0">
+          <div className="sticky top-6">
+            <ResultsPanel
+              overall={results.overall}
+              band={results.band}
+              graded={results.graded}
+              total={results.total}
+              clauses={results.clauses}
+              principles={results.principles}
+            />
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function RequirementCard({
+  req,
+  scale,
+  saveByResponse,
+  onSelect,
+  saveError,
+}: {
+  req: WorkspaceRequirement;
+  scale: ReturnType<typeof buildScale>;
+  saveByResponse: Record<string, SaveState>;
+  onSelect: (responseId: string, typeId: string) => void;
+  saveError: unknown;
+}) {
+  const score = requirementScore(req, scale);
+  const graded = requirementGradedCount(req);
+  const done = graded === req.criteria.length && req.criteria.length > 0;
+
+  return (
+    <article className="rounded-xl border border-border bg-card">
+      <div className="flex flex-wrap items-center gap-2 px-4 pt-4">
+        {req.code && (
+          <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs font-medium text-foreground">
+            {req.code}
+          </span>
+        )}
+        {req.principle_name && (
+          <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+            {req.principle_name}
+          </span>
+        )}
+        {req.level_name && (
+          <span className="text-xs text-muted-foreground">{req.level_name}</span>
+        )}
+        <span
+          className={`ml-auto rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+            done
+              ? "bg-primary/10 text-primary"
+              : graded > 0
+                ? "bg-muted text-foreground"
+                : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {done ? `Graded · ${Math.round((score ?? 0) * 100)}%` : graded > 0 ? "In progress" : "Pending"}
+        </span>
+      </div>
+
+      <div className="px-4 pb-2 pt-3">
+        <p className="text-[15px] leading-relaxed text-foreground">{req.title}</p>
+        {req.description && (
+          <p className="mt-1.5 text-sm text-muted-foreground">{req.description}</p>
+        )}
+      </div>
+
+      <div className="divide-y divide-border">
+        {req.criteria.map((criterion) => {
+          const saveState = saveByResponse[criterion.response_id];
+          const selectedTypeId =
+            saveState && saveState.state !== "error"
+              ? saveState.typeId
+              : (criterion.response_type_id ?? saveState?.typeId ?? null);
+          return (
+            <div key={criterion.response_id} className="px-4 py-4">
+              {req.criteria.length > 1 && (
+                <p className="mb-2 text-sm text-foreground">{criterion.title}</p>
+              )}
+              {criterion.description && (
+                <p className="mb-2 text-xs text-muted-foreground">{criterion.description}</p>
+              )}
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Grade
+              </p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {scale.ordered.map((t, i) => {
+                  const selected = selectedTypeId === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      aria-pressed={selected}
+                      disabled={saveState?.state === "saving"}
+                      onClick={() => onSelect(criterion.response_id, t.id)}
+                      className={`rounded-lg border px-2 py-2.5 text-center transition-colors disabled:opacity-70 ${
+                        selected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background text-foreground hover:bg-accent"
+                      }`}
+                    >
+                      <span className="block text-base font-semibold tabular-nums">{i}</span>
+                      <span className="block text-[11px] opacity-80">{t.display_name}</span>
+                    </button>
                   );
                 })}
               </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
-        <div className="flex items-center justify-between text-sm">
-          <p className="text-foreground">Overall progress</p>
-          <p className="font-semibold tabular-nums text-foreground">{progress}%</p>
-        </div>
-        <div
-          className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted"
-          role="progressbar"
-          aria-valuenow={progress}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <div
-            className="h-full rounded-full bg-primary transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-
-      <ProgressBreakdown
-        levels={breakdown.levels}
-        principles={breakdown.principles}
-        processClauses={breakdown.processClauses}
-      />
-
-      <div className="rounded-lg border border-border bg-card">
-        <div className="border-b border-border px-4 py-4">
-          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground">
-              {requirement.level_name || "—"}
-            </span>
-            <ChevronRight className="h-3 w-3" />
-            <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground">
-              {requirement.principle_name || "—"}
-            </span>
-            {requirement.process_clauses.map((pc) => (
-              <span
-                key={pc.id}
-                className="rounded-full border border-border px-2 py-0.5 font-medium"
-              >
-                {pc.code ? `${pc.code} · ` : ""}
-                {pc.display_name}
-              </span>
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Requirement {reqIndex + 1} of {requirements.length} · {reqPercent}% complete
-          </p>
-          <h2 className="mt-1 text-base font-semibold text-foreground">
-            {requirement.code ? `${requirement.code} — ` : ""}
-            {requirement.title}
-          </h2>
-          {requirement.description && (
-            <p className="mt-1.5 text-sm text-muted-foreground">{requirement.description}</p>
-          )}
-          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${reqPercent}%` }}
-            />
-          </div>
-        </div>
-
-        <div className="divide-y divide-border">
-          {requirement.criteria.map((criterion) => {
-            const saveState = saveByResponse[criterion.response_id];
-            const selectedTypeId =
-              saveState && saveState.state !== "error"
-                ? saveState.typeId
-                : (saveState?.typeId ?? criterion.response_type_id);
-            return (
-              <div key={criterion.response_id} className="px-4 py-5">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-medium text-foreground">{criterion.title}</p>
-                  {criterion.status === "completed" || saveState?.state === "saved" ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                      <Check className="h-3 w-3" /> Answered
-                    </span>
-                  ) : (
-                    <span className="shrink-0 text-xs text-muted-foreground">Not answered</span>
-                  )}
-                </div>
-                {criterion.description && (
-                  <p className="mt-1.5 text-sm text-muted-foreground">{criterion.description}</p>
+              <div className="mt-2 min-h-5 text-xs">
+                {saveState?.state === "saving" && (
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
+                  </span>
                 )}
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {(typesQuery.data ?? []).map((t) => {
-                    const selected = selectedTypeId === t.id;
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        aria-pressed={selected}
-                        disabled={saveState?.state === "saving"}
-                        onClick={() => doSave(criterion.response_id, t.id)}
-                        className={`relative rounded-lg border p-3 text-left transition-colors disabled:opacity-70 ${
-                          selected
-                            ? "border-primary bg-primary/5 ring-1 ring-primary"
-                            : "border-border bg-background hover:bg-accent"
-                        }`}
-                      >
-                        <span className="flex items-start gap-2">
-                          <span
-                            className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full border border-border"
-                            style={t.color ? { backgroundColor: t.color } : undefined}
-                            aria-hidden="true"
-                          />
-                          <span className="flex-1">
-                            <span className="block text-sm font-medium text-foreground">
-                              {t.display_name}
-                            </span>
-                            {t.description && (
-                              <span className="mt-0.5 block text-xs text-muted-foreground">
-                                {t.description}
-                              </span>
-                            )}
-                          </span>
-                          {selected && <Check className="h-4 w-4 shrink-0 text-primary" />}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-2 min-h-5 text-xs">
-                  {saveState?.state === "saving" && (
-                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
-                    </span>
-                  )}
-                  {saveState?.state === "saved" && (
-                    <span className="inline-flex items-center gap-1.5 text-primary">
-                      <Check className="h-3.5 w-3.5" /> Saved
-                    </span>
-                  )}
-                  {saveState?.state === "error" && (
-                    <span className="inline-flex items-center gap-2 text-destructive">
-                      <AlertCircle className="h-3.5 w-3.5" />
-                      Could not save. {friendlyWorkspaceError(save.error)}
-                      <button
-                        type="button"
-                        onClick={() => doSave(criterion.response_id, saveState.typeId)}
-                        className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2 py-1 font-medium text-foreground hover:bg-accent"
-                      >
-                        <RefreshCw className="h-3 w-3" /> Retry
-                      </button>
-                    </span>
-                  )}
-                </div>
+                {saveState?.state === "saved" && (
+                  <span className="inline-flex items-center gap-1.5 text-primary">
+                    <Check className="h-3.5 w-3.5" /> Saved
+                  </span>
+                )}
+                {saveState?.state === "error" && (
+                  <span className="inline-flex items-center gap-2 text-destructive">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    Could not save. {friendlyWorkspaceError(saveError)}
+                    <button
+                      type="button"
+                      onClick={() => onSelect(criterion.response_id, saveState.typeId)}
+                      className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2 py-1 font-medium text-foreground hover:bg-accent"
+                    >
+                      <RefreshCw className="h-3 w-3" /> Retry
+                    </button>
+                  </span>
+                )}
               </div>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
-          <button
-            type="button"
-            onClick={() => setReqIndex((i) => Math.max(i - 1, 0))}
-            disabled={reqIndex === 0}
-            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50"
-          >
-            <ChevronLeft className="h-4 w-4" /> Previous Requirement
-          </button>
-          <button
-            type="button"
-            onClick={() => setReqIndex((i) => Math.min(i + 1, requirements.length - 1))}
-            disabled={reqIndex >= requirements.length - 1}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            Next Requirement <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+            </div>
+          );
+        })}
       </div>
-    </div>
+    </article>
   );
 }
