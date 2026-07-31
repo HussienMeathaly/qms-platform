@@ -31,6 +31,243 @@ function slugCode(name: string): string {
 const inputClass =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-60";
 
+function TeamSection({ organizationId }: { organizationId: string }) {
+  const qc = useQueryClient();
+  const membersQuery = useOrganizationMembers(organizationId);
+  const members = membersQuery.data ?? [];
+
+  const [drafts, setDrafts] = useState<Record<string, { fullName: string; role: OrganizationRole }>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newRole, setNewRole] = useState<OrganizationRole>("org_admin");
+
+  function refresh() {
+    qc.invalidateQueries({ queryKey: ["organization-members", organizationId] });
+  }
+
+  function draftFor(userId: string, fallback: { full_name: string; role: OrganizationRole }) {
+    return drafts[userId] ?? { fullName: fallback.full_name, role: fallback.role };
+  }
+
+  async function saveMember(userId: string, fallback: { full_name: string; role: OrganizationRole }) {
+    const d = draftFor(userId, fallback);
+    if (!d.fullName.trim()) {
+      setError("Member name is required.");
+      return;
+    }
+    setError(null);
+    setBusy(userId);
+    try {
+      await updateOrgUser({
+        data: {
+          organizationId,
+          userId,
+          fullName: d.fullName.trim(),
+          jobTitle: null,
+          role: d.role,
+        },
+      });
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+      refresh();
+      toast.success("Member updated");
+    } catch (err) {
+      setError(friendlyOrganizationError(err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function deleteMember(userId: string) {
+    setError(null);
+    setBusy(userId);
+    try {
+      await removeOrgUser({ data: { organizationId, userId } });
+      refresh();
+      toast.success("Member removed");
+    } catch (err) {
+      setError(friendlyOrganizationError(err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function addMember() {
+    if (!newName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
+      setError("Enter a valid name and email for the new member.");
+      return;
+    }
+    setError(null);
+    setBusy("new");
+    try {
+      const res = await createOrgUser({
+        data: {
+          organizationId,
+          email: newEmail.trim(),
+          fullName: newName.trim(),
+          jobTitle: null,
+          role: newRole,
+        },
+      });
+      setNewName("");
+      setNewEmail("");
+      setNewRole("org_admin");
+      setAdding(false);
+      refresh();
+      if (res.tempPassword) {
+        toast.success("Member added", {
+          description: `Temporary password: ${res.tempPassword}`,
+          duration: 15000,
+        });
+      } else {
+        toast.success("Existing user linked to this organization");
+      }
+    } catch (err) {
+      setError(friendlyOrganizationError(err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-medium text-foreground">Team members</h3>
+          <p className="text-xs text-muted-foreground">Edit names and roles, or add new members.</p>
+        </div>
+        {!adding && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+          >
+            <UserPlus className="h-3.5 w-3.5" /> Add member
+          </button>
+        )}
+      </div>
+
+      {membersQuery.isLoading ? (
+        <p className="text-xs text-muted-foreground">Loading members…</p>
+      ) : members.length === 0 && !adding ? (
+        <p className="text-xs text-muted-foreground">No members yet.</p>
+      ) : (
+        <ul className="space-y-2">
+          {members.map((m) => {
+            const d = draftFor(m.user_id, m);
+            const dirty = d.fullName !== m.full_name || d.role !== m.role;
+            return (
+              <li key={m.user_id} className="grid gap-2 rounded-md border border-border bg-background p-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
+                <input
+                  value={d.fullName}
+                  onChange={(e) =>
+                    setDrafts((prev) => ({ ...prev, [m.user_id]: { ...d, fullName: e.target.value } }))
+                  }
+                  className={inputClass}
+                  aria-label="Member name"
+                />
+                <select
+                  value={d.role}
+                  onChange={(e) =>
+                    setDrafts((prev) => ({
+                      ...prev,
+                      [m.user_id]: { ...d, role: e.target.value as OrganizationRole },
+                    }))
+                  }
+                  className={inputClass}
+                  aria-label="Member role"
+                >
+                  {ORGANIZATION_ROLES.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => saveMember(m.user_id, m)}
+                  disabled={!dirty || busy === m.user_id}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                >
+                  {busy === m.user_id && <Loader2 className="h-3 w-3 animate-spin" />} Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteMember(m.user_id)}
+                  disabled={busy === m.user_id}
+                  aria-label={`Remove ${m.full_name}`}
+                  className="inline-flex h-8 w-8 items-center justify-center justify-self-end rounded-md text-destructive/80 hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {adding && (
+        <div className="grid gap-2 rounded-md border border-dashed border-border bg-background p-3 sm:grid-cols-2">
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Full name"
+            aria-label="New member name"
+            className={cn(inputClass, "sm:col-span-2")}
+          />
+          <input
+            type="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            placeholder="email@example.org"
+            aria-label="New member email"
+            className={inputClass}
+          />
+          <select
+            value={newRole}
+            onChange={(e) => setNewRole(e.target.value as OrganizationRole)}
+            aria-label="New member role"
+            className={inputClass}
+          >
+            {ORGANIZATION_ROLES.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <button
+              type="button"
+              onClick={addMember}
+              disabled={busy === "new"}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60"
+            >
+              {busy === "new" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdding(false)}
+              className="rounded-md border border-input px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 export function OrganizationFormDialog({ open, onOpenChange, organization }: Props) {
   const isEdit = Boolean(organization);
   const [name, setName] = useState("");
