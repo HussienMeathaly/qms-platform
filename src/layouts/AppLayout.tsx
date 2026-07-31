@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { usePlatformAdmin } from "@/features/auth/usePlatformAdmin";
 import { useQueryClient } from "@tanstack/react-query";
 
 const primaryNavItems = [
@@ -32,6 +33,9 @@ const primaryNavItems = [
   { to: "/reviews", label: "Reviews", icon: CheckSquare },
   { to: "/reports", label: "Reports", icon: FileBarChart },
 ] as const;
+
+// Screens a regular (non platform-admin) member is allowed to see.
+const memberNavPaths = ["/", "/my-assessments", "/reports"] as const;
 
 // Reference data — entered once per framework. Hidden behind an advanced group
 // so day-to-day users only see the consultant / organization journey.
@@ -70,6 +74,10 @@ function Brand() {
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { isPlatformAdmin } = usePlatformAdmin();
+  const visiblePrimary = isPlatformAdmin
+    ? primaryNavItems
+    : primaryNavItems.filter((n) => (memberNavPaths as readonly string[]).includes(n.to));
   const setupActive = setupNavItems.some((n) => pathname.startsWith(n.to));
   const [setupOpen, setSetupOpen] = useState(setupActive);
 
@@ -79,7 +87,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav className="flex flex-col gap-0.5" aria-label="Primary">
-      {primaryNavItems.map(({ to, label, icon: Icon }) => (
+      {visiblePrimary.map(({ to, label, icon: Icon }) => (
         <Link
           key={to}
           to={to}
@@ -95,6 +103,8 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className="my-2 border-t border-border" />
 
+      {isPlatformAdmin && (
+        <>
       <button
         type="button"
         onClick={() => setSetupOpen((v) => !v)}
@@ -123,6 +133,8 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         ))}
 
       <div className="my-2 border-t border-border" />
+        </>
+      )}
 
       {secondaryNavItems.map(({ to, label, icon: Icon }) => (
         <Link
