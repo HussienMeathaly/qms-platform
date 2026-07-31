@@ -6,11 +6,11 @@ import { AssessmentNotFoundError, friendlyWorkspaceError } from "./service";
 import {
   buildResults,
   buildScale,
-  groupByClause,
+  buildOutline,
   requirementGradedCount,
   requirementScore,
 } from "./results";
-import { ResultsPanel } from "./ResultsPanel";
+import { ProgressSidebar } from "./ProgressSidebar";
 import type { WorkspaceRequirement } from "./types";
 
 type SaveState = { state: "saving" | "saved" | "error"; typeId: string };
@@ -27,7 +27,7 @@ export function AssessmentWorkspaceView({ assessmentId }: { assessmentId: string
   const requirements = useMemo(() => data?.requirements ?? [], [data]);
   const scale = useMemo(() => buildScale(typesQuery.data ?? []), [typesQuery.data]);
   const results = useMemo(() => buildResults(requirements, scale), [requirements, scale]);
-  const sections = useMemo(() => groupByClause(requirements), [requirements]);
+  const outline = useMemo(() => buildOutline(requirements, scale), [requirements, scale]);
 
   if (query.isPending) {
     return (
