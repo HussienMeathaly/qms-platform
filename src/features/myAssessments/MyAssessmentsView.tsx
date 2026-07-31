@@ -51,42 +51,57 @@ export function MyAssessmentsView() {
         )}
 
         {!query.isError && !query.isPending && rows.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-4 py-3 font-medium">Organization</th>
-                  <th className="px-4 py-3 font-medium">Framework</th>
-                  <th className="px-4 py-3 font-medium">Version</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Progress</th>
-                  <th className="px-4 py-3 font-medium text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.assessment_id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3 text-foreground">{r.organization_name}</td>
-                    <td className="px-4 py-3 text-foreground">{r.framework_code}</td>
-                    <td className="px-4 py-3 text-foreground">{r.version_number}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.status}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {r.completed_count} / {r.total_count} ({r.progress}%)
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        to="/my-assessments/$assessmentId"
-                        params={{ assessmentId: r.assessment_id }}
-                        className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                      >
-                        {r.completed_count > 0 ? "Continue Assessment" : "Start Assessment"}
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="divide-y divide-border">
+            {rows.map((r) => (
+              <li
+                key={r.assessment_id}
+                className="flex flex-col gap-4 p-5 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="truncate text-sm font-semibold text-foreground">
+                      {r.organization_name}
+                    </h2>
+                    <span className="rounded-full border border-border bg-muted/50 px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">
+                      {r.status.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {r.framework_code} · Version {r.version_number}
+                  </p>
+                  <div className="mt-3 max-w-md">
+                    <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                      <span>
+                        {r.completed_count} of {r.total_count} answered
+                      </span>
+                      <span className="font-semibold tabular-nums text-foreground">
+                        {r.progress}%
+                      </span>
+                    </div>
+                    <div
+                      className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted"
+                      role="progressbar"
+                      aria-valuenow={r.progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${r.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Link
+                  to="/my-assessments/$assessmentId"
+                  params={{ assessmentId: r.assessment_id }}
+                  className="inline-flex shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  {r.completed_count > 0 ? "Continue" : "Start"}
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
