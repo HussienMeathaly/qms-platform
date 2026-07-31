@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Building2, Check, Loader2, Mail, UserPlus, Users, X } from "lucide-react";
+import { Building2, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Organization, OrganizationInput, OrganizationStatus } from "./types";
 import { useCreateOrganization, useUpdateOrganization } from "./hooks";
 import { friendlyOrganizationError } from "./service";
-import { useUserProfiles } from "./membersHooks";
-import { addMember, ORGANIZATION_ROLES, type OrganizationRole } from "./membersService";
+import { ORGANIZATION_ROLES, type OrganizationRole } from "./membersService";
 import { createOrgUser } from "@/lib/orgUsers.functions";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +14,7 @@ type Props = {
   organization?: Organization | null;
 };
 
-type FieldErrors = Partial<Record<"name" | "fullName" | "email" | "existingUser", string>>;
+type FieldErrors = Partial<Record<"name" | "fullName" | "email", string>>;
 
 function slugCode(name: string): string {
   const base = name
@@ -35,12 +34,10 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
   const [name, setName] = useState("");
   const [status, setStatus] = useState<OrganizationStatus>("active");
 
-  const [mode, setMode] = useState<"new" | "existing" | "none">("new");
+  const [withContact, setWithContact] = useState(true);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [jobTitle, setJobTitle] = useState("");
   const [role, setRole] = useState<OrganizationRole>("org_admin");
-  const [existingUserId, setExistingUserId] = useState("");
 
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -49,18 +46,15 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
   const createMut = useCreateOrganization();
   const updateMut = useUpdateOrganization();
   const submitting = createMut.isPending || updateMut.isPending || creatingUser;
-  const profilesQuery = useUserProfiles(open && !isEdit && mode === "existing");
 
   useEffect(() => {
     if (!open) return;
     setName(organization?.name ?? "");
     setStatus(organization?.status ?? "active");
-    setMode("new");
+    setWithContact(true);
     setFullName("");
     setEmail("");
-    setJobTitle("");
     setRole("org_admin");
-    setExistingUserId("");
     setErrors({});
     setSubmitError(null);
   }, [open, organization]);
@@ -72,13 +66,10 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
     if (!name.trim()) next.name = "Organization name is required.";
     else if (name.trim().length > 255) next.name = "Keep the name under 255 characters.";
 
-    if (!isEdit && mode === "new") {
+    if (!isEdit && withContact) {
       if (!fullName.trim()) next.fullName = "Contact name is required.";
       if (!email.trim()) next.email = "Email is required.";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = "Enter a valid email address.";
-    }
-    if (!isEdit && mode === "existing" && !existingUserId) {
-      next.existingUser = "Select a user or switch to “No user for now”.";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -119,7 +110,7 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
         }
       }
 
-      if (mode === "new") {
+      if (withContact) {
         setCreatingUser(true);
         try {
           const res = await createOrgUser({
@@ -127,7 +118,7 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
               organizationId: created.id,
               email: email.trim(),
               fullName: fullName.trim(),
-              jobTitle: jobTitle.trim() || null,
+              jobTitle: null,
               role,
             },
           });
@@ -142,9 +133,6 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
         } finally {
           setCreatingUser(false);
         }
-      } else if (mode === "existing" && existingUserId) {
-        await addMember({ organizationId: created.id, userId: existingUserId, role });
-        toast.success("Organization created with assigned user");
       } else {
         toast.success("Organization created");
       }
@@ -156,12 +144,6 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
   }
 
   if (!open) return null;
-
-  const modes: { value: typeof mode; label: string; icon: typeof UserPlus }[] = [
-    { value: "new", label: "New user", icon: UserPlus },
-    { value: "existing", label: "Existing user", icon: Users },
-    { value: "none", label: "Later", icon: Check },
-  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 py-8">
@@ -256,35 +238,23 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
 
           {!isEdit && (
             <section className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Main contact</p>
-                <p className="text-xs text-muted-foreground">
-                  The person who will complete the assessment for this organization.
-                </p>
-              </div>
+              <label className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={withContact}
+                  onChange={(e) => setWithContact(e.target.checked)}
+                  disabled={submitting}
+                  className="mt-0.5 h-4 w-4 rounded border-input accent-primary"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-foreground">Add main contact</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Creates an account and links it to this organization.
+                  </span>
+                </span>
+              </label>
 
-              <div className="inline-flex w-full rounded-lg border border-input bg-background p-0.5">
-                {modes.map((m) => (
-                  <button
-                    key={m.value}
-                    type="button"
-                    onClick={() => setMode(m.value)}
-                    disabled={submitting}
-                    aria-pressed={mode === m.value}
-                    className={cn(
-                      "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
-                      mode === m.value
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <m.icon className="h-3.5 w-3.5" />
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-
-              {mode === "new" && (
+              {withContact && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5 sm:col-span-2">
                     <label htmlFor="u-name" className="text-xs font-medium text-foreground">
@@ -301,37 +271,21 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
                     />
                     {errors.fullName && <p className="text-xs text-destructive">{errors.fullName}</p>}
                   </div>
-                  <div className="space-y-1.5 sm:col-span-2">
+                  <div className="space-y-1.5">
                     <label htmlFor="u-email" className="text-xs font-medium text-foreground">
                       Email <span className="text-destructive">*</span>
                     </label>
-                    <div className="relative">
-                      <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                      <input
-                        id="u-email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={submitting}
-                        className={cn(inputClass, "pl-9")}
-                        placeholder="sara@example.org"
-                        aria-invalid={Boolean(errors.email)}
-                      />
-                    </div>
-                    {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="u-job" className="text-xs font-medium text-foreground">
-                      Job title
-                    </label>
                     <input
-                      id="u-job"
-                      value={jobTitle}
-                      onChange={(e) => setJobTitle(e.target.value)}
+                      id="u-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       disabled={submitting}
                       className={inputClass}
-                      placeholder="Quality Manager"
+                      placeholder="sara@example.org"
+                      aria-invalid={Boolean(errors.email)}
                     />
+                    {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <label htmlFor="u-role" className="text-xs font-medium text-foreground">
@@ -349,61 +303,7 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
                       ))}
                     </select>
                   </div>
-                  <p className="sm:col-span-2 text-xs text-muted-foreground">
-                    An account is created instantly and a temporary password is shown once after saving.
-                  </p>
                 </div>
-              )}
-
-              {mode === "existing" && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label htmlFor="u-existing" className="text-xs font-medium text-foreground">
-                      User <span className="text-destructive">*</span>
-                    </label>
-                    <select
-                      id="u-existing"
-                      value={existingUserId}
-                      onChange={(e) => setExistingUserId(e.target.value)}
-                      disabled={submitting || profilesQuery.isLoading}
-                      className={inputClass}
-                      aria-invalid={Boolean(errors.existingUser)}
-                    >
-                      <option value="">
-                        {profilesQuery.isLoading ? "Loading users…" : "Select a user"}
-                      </option>
-                      {(profilesQuery.data ?? []).map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.full_name}{p.job_title ? ` — ${p.job_title}` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.existingUser && <p className="text-xs text-destructive">{errors.existingUser}</p>}
-                    {profilesQuery.isError && <p className="text-xs text-destructive">Unable to load users.</p>}
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="u-role2" className="text-xs font-medium text-foreground">
-                      Role
-                    </label>
-                    <select
-                      id="u-role2"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value as OrganizationRole)}
-                      disabled={submitting}
-                      className={inputClass}
-                    >
-                      {ORGANIZATION_ROLES.map((r) => (
-                        <option key={r.value} value={r.value}>{r.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {mode === "none" && (
-                <p className="text-xs text-muted-foreground">
-                  You can add members later from the organization row.
-                </p>
               )}
             </section>
           )}
