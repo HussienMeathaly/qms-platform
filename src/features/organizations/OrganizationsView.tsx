@@ -190,7 +190,7 @@ export function OrganizationsView() {
                 setSearchInput(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search by name or code"
+              placeholder="Search organizations"
               aria-label="Search organizations"
               className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm text-foreground shadow-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
@@ -229,10 +229,7 @@ export function OrganizationsView() {
         )}
 
         <div className="hidden grid-cols-12 gap-4 border-b border-border bg-muted/40 px-4 py-2.5 md:grid">
-          <div className="col-span-2">
-            <SortHeader label="Code" field="code" activeField={sortField} direction={sortDirection} onSort={handleSort} />
-          </div>
-          <div className="col-span-4">
+          <div className="col-span-6">
             <SortHeader label="Name" field="name" activeField={sortField} direction={sortDirection} onSort={handleSort} />
           </div>
           <div className="col-span-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -283,7 +280,6 @@ export function OrganizationsView() {
                 <div className="col-span-12 flex items-center justify-between gap-3 md:hidden">
                   <div className="min-w-0">
                     <p className="truncate font-medium text-foreground">{org.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{org.code}</p>
                   </div>
                   <StatusBadge status={org.status} />
                 </div>
@@ -319,10 +315,7 @@ export function OrganizationsView() {
                   </div>
                 </div>
 
-                <div className="col-span-2 hidden truncate font-mono text-xs text-foreground md:block">
-                  {org.code}
-                </div>
-                <div className="col-span-4 hidden truncate font-medium text-foreground md:block">
+                <div className="col-span-6 hidden truncate font-medium text-foreground md:block">
                   {org.name}
                 </div>
                 <div className="col-span-2 hidden md:block">
