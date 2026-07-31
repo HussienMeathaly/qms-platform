@@ -171,7 +171,7 @@ export async function loadWorkspace(
 export async function listResponseTypes(): Promise<ResponseTypeOption[]> {
   const { data, error } = await appSchema()
     .from("response_types")
-    .select("id, code, display_name, description, color, sort_order")
+    .select("id, code, display_name, description, color, sort_order, score")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .limit(100);
