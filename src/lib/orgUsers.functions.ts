@@ -8,6 +8,7 @@ const schema = z.object({
   fullName: z.string().trim().min(1).max(150),
   jobTitle: z.string().trim().max(150).nullable().optional(),
   role: z.enum(["org_admin", "org_contributor", "viewer"]),
+  password: z.string().min(8).max(72).optional(),
 });
 
 export const createOrgUser = createServerFn({ method: "POST" })
@@ -21,6 +22,7 @@ export const createOrgUser = createServerFn({ method: "POST" })
       fullName: data.fullName,
       jobTitle: data.jobTitle?.trim() ? data.jobTitle.trim() : null,
       role: data.role,
+      password: data.password,
     });
   });
 

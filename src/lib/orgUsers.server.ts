@@ -23,10 +23,11 @@ export async function createOrgUserImpl(input: {
   fullName: string;
   jobTitle: string | null;
   role: Role;
+  password?: string;
 }): Promise<{ userId: string; tempPassword: string | null; existing: boolean }> {
   const email = input.email.toLowerCase();
   let userId: string | null = null;
-  let password: string | null = tempPassword();
+  let password: string | null = input.password?.trim() ? input.password.trim() : tempPassword();
   let existing = false;
 
   const created = await supabaseAdmin.auth.admin.createUser({
