@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Building2, Loader2, X } from "lucide-react";
+import { Building2, Loader2, Plus, Trash2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Organization, OrganizationInput, OrganizationStatus } from "./types";
 import { useCreateOrganization, useUpdateOrganization } from "./hooks";
 import { friendlyOrganizationError } from "./service";
 import { ORGANIZATION_ROLES, type OrganizationRole } from "./membersService";
-import { createOrgUser } from "@/lib/orgUsers.functions";
+import { useOrganizationMembers } from "./membersHooks";
+import { createOrgUser, removeOrgUser, updateOrgUser } from "@/lib/orgUsers.functions";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 type Props = {
