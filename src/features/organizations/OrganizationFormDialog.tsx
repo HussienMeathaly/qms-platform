@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import type { Organization, OrganizationInput, OrganizationStatus } from "./types";
 import { useCreateOrganization, useUpdateOrganization } from "./hooks";
 import { friendlyOrganizationError } from "./service";
+import { useUserProfiles } from "./membersHooks";
+import { addMember, ORGANIZATION_ROLES, type OrganizationRole } from "./membersService";
 
 type Props = {
   open: boolean;
@@ -18,18 +20,23 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState<OrganizationStatus>("active");
+  const [assessorId, setAssessorId] = useState("");
+  const [assessorRole, setAssessorRole] = useState<OrganizationRole>("org_admin");
   const [errors, setErrors] = useState<Partial<Record<keyof OrganizationInput, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const createMut = useCreateOrganization();
   const updateMut = useUpdateOrganization();
   const submitting = createMut.isPending || updateMut.isPending;
+  const profilesQuery = useUserProfiles(open && !isEdit);
 
   useEffect(() => {
     if (open) {
       setCode(organization?.code ?? "");
       setName(organization?.name ?? "");
       setStatus(organization?.status ?? "active");
+      setAssessorId("");
+      setAssessorRole("org_admin");
       setErrors({});
       setSubmitError(null);
     }
@@ -56,8 +63,17 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
         await updateMut.mutateAsync({ id: organization.id, input });
         toast.success("Organization updated");
       } else {
-        await createMut.mutateAsync(input);
-        toast.success("Organization created");
+        const created = await createMut.mutateAsync(input);
+        if (assessorId) {
+          await addMember({
+            organizationId: created.id,
+            userId: assessorId,
+            role: assessorRole,
+          });
+          toast.success("Organization created with assigned user");
+        } else {
+          toast.success("Organization created");
+        }
       }
       onOpenChange(false);
     } catch (err) {
