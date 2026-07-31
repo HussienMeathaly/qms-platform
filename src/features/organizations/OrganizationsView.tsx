@@ -229,7 +229,7 @@ export function OrganizationsView() {
         )}
 
         <div className="hidden grid-cols-12 gap-4 border-b border-border bg-muted/40 px-4 py-2.5 md:grid">
-          <div className="col-span-6">
+          <div className="col-span-7">
             <SortHeader label="Name" field="name" activeField={sortField} direction={sortDirection} onSort={handleSort} />
           </div>
           <div className="col-span-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -237,9 +237,6 @@ export function OrganizationsView() {
           </div>
           <div className="col-span-2">
             <SortHeader label="Created" field="created_at" activeField={sortField} direction={sortDirection} onSort={handleSort} />
-          </div>
-          <div className="col-span-1">
-            <SortHeader label="Updated" field="updated_at" activeField={sortField} direction={sortDirection} onSort={handleSort} />
           </div>
           <div className="col-span-1 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Actions
@@ -285,7 +282,7 @@ export function OrganizationsView() {
                 </div>
                 <div className="col-span-12 flex items-center justify-between gap-2 md:hidden">
                   <p className="text-xs text-muted-foreground">
-                    Created {formatDate(org.created_at)} · Updated {formatDate(org.updated_at)}
+                    Created {formatDate(org.created_at)}
                   </p>
                   <div className="flex items-center gap-1">
                     <button
@@ -315,7 +312,7 @@ export function OrganizationsView() {
                   </div>
                 </div>
 
-                <div className="col-span-6 hidden truncate font-medium text-foreground md:block">
+                <div className="col-span-7 hidden truncate font-medium text-foreground md:block">
                   {org.name}
                 </div>
                 <div className="col-span-2 hidden md:block">
@@ -323,9 +320,6 @@ export function OrganizationsView() {
                 </div>
                 <div className="col-span-2 hidden text-muted-foreground md:block">
                   {formatDate(org.created_at)}
-                </div>
-                <div className="col-span-1 hidden text-muted-foreground md:block">
-                  {formatDate(org.updated_at)}
                 </div>
                 <div className="col-span-1 hidden items-center justify-end gap-1 md:flex">
                   <button
