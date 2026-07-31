@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import type { Organization, OrganizationInput, OrganizationStatus } from "./types";
 import { useCreateOrganization, useUpdateOrganization } from "./hooks";
 import { friendlyOrganizationError } from "./service";
+import { useUserProfiles } from "./membersHooks";
+import { addMember, ORGANIZATION_ROLES, type OrganizationRole } from "./membersService";
 
 type Props = {
   open: boolean;
@@ -18,18 +20,23 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [status, setStatus] = useState<OrganizationStatus>("active");
+  const [assessorId, setAssessorId] = useState("");
+  const [assessorRole, setAssessorRole] = useState<OrganizationRole>("org_admin");
   const [errors, setErrors] = useState<Partial<Record<keyof OrganizationInput, string>>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const createMut = useCreateOrganization();
   const updateMut = useUpdateOrganization();
   const submitting = createMut.isPending || updateMut.isPending;
+  const profilesQuery = useUserProfiles(open && !isEdit);
 
   useEffect(() => {
     if (open) {
       setCode(organization?.code ?? "");
       setName(organization?.name ?? "");
       setStatus(organization?.status ?? "active");
+      setAssessorId("");
+      setAssessorRole("org_admin");
       setErrors({});
       setSubmitError(null);
     }
@@ -56,8 +63,17 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
         await updateMut.mutateAsync({ id: organization.id, input });
         toast.success("Organization updated");
       } else {
-        await createMut.mutateAsync(input);
-        toast.success("Organization created");
+        const created = await createMut.mutateAsync(input);
+        if (assessorId) {
+          await addMember({
+            organizationId: created.id,
+            userId: assessorId,
+            role: assessorRole,
+          });
+          toast.success("Organization created with assigned user");
+        } else {
+          toast.success("Organization created");
+        }
       }
       onOpenChange(false);
     } catch (err) {
@@ -159,6 +175,60 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
           {submitError && (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
               {submitError}
+            </div>
+          )}
+
+          {!isEdit && (
+            <div className="space-y-3 rounded-md border border-border bg-muted/30 p-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">Assigned user</p>
+                <p className="text-xs text-muted-foreground">
+                  Optional — the person who will complete the assessment for this organization.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="org-assessor" className="text-xs font-medium text-foreground">
+                  User
+                </label>
+                <select
+                  id="org-assessor"
+                  value={assessorId}
+                  onChange={(e) => setAssessorId(e.target.value)}
+                  disabled={submitting || profilesQuery.isLoading}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                >
+                  <option value="">
+                    {profilesQuery.isLoading ? "Loading users…" : "No user assigned"}
+                  </option>
+                  {(profilesQuery.data ?? []).map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.full_name}
+                      {p.job_title ? ` — ${p.job_title}` : ""}
+                    </option>
+                  ))}
+                </select>
+                {profilesQuery.isError && (
+                  <p className="text-xs text-destructive">Unable to load users.</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="org-assessor-role" className="text-xs font-medium text-foreground">
+                  Role
+                </label>
+                <select
+                  id="org-assessor-role"
+                  value={assessorRole}
+                  onChange={(e) => setAssessorRole(e.target.value as OrganizationRole)}
+                  disabled={submitting || !assessorId}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                >
+                  {ORGANIZATION_ROLES.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
 
