@@ -18,14 +18,24 @@ import {
   X,
   ShieldCheck,
   LogOut,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useQueryClient } from "@tanstack/react-query";
 
-const navItems = [
+const primaryNavItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/organizations", label: "Organizations", icon: Building2 },
+  { to: "/assessments", label: "Assessments", icon: ClipboardList },
+  { to: "/my-assessments", label: "My Assessments", icon: ClipboardCheck },
+  { to: "/reviews", label: "Reviews", icon: CheckSquare },
+  { to: "/reports", label: "Reports", icon: FileBarChart },
+] as const;
+
+// Reference data — entered once per framework. Hidden behind an advanced group
+// so day-to-day users only see the consultant / organization journey.
+const setupNavItems = [
   { to: "/frameworks", label: "Frameworks", icon: Layers },
   { to: "/framework-versions", label: "Framework Versions", icon: GitBranch },
   { to: "/levels", label: "Levels", icon: Layers3 },
@@ -33,12 +43,16 @@ const navItems = [
   { to: "/requirements", label: "Requirements", icon: ClipboardCheck },
   { to: "/assessment-criteria", label: "Assessment Criteria", icon: ListChecks },
   { to: "/process-clauses", label: "Process Clauses", icon: FileText },
-  { to: "/assessments", label: "Assessments", icon: ClipboardList },
-  { to: "/my-assessments", label: "My Assessments", icon: ClipboardCheck },
-  { to: "/reviews", label: "Reviews", icon: CheckSquare },
-  { to: "/reports", label: "Reports", icon: FileBarChart },
+] as const;
+
+const secondaryNavItems = [
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
+
+const navItems = [...primaryNavItems, ...setupNavItems, ...secondaryNavItems] as const;
+
+const linkClass =
+  "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-accent hover:text-foreground";
 
 function Brand() {
   return (
@@ -55,16 +69,68 @@ function Brand() {
 }
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const setupActive = setupNavItems.some((n) => pathname.startsWith(n.to));
+  const [setupOpen, setSetupOpen] = useState(setupActive);
+
+  useEffect(() => {
+    if (setupActive) setSetupOpen(true);
+  }, [setupActive]);
+
   return (
     <nav className="flex flex-col gap-0.5" aria-label="Primary">
-      {navItems.map(({ to, label, icon: Icon }) => (
+      {primaryNavItems.map(({ to, label, icon: Icon }) => (
         <Link
           key={to}
           to={to}
           onClick={onNavigate}
-          className="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+          className={linkClass}
           activeProps={{ className: "bg-accent text-foreground" }}
           activeOptions={{ exact: to === "/" }}
+        >
+          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="truncate">{label}</span>
+        </Link>
+      ))}
+
+      <div className="my-2 border-t border-border" />
+
+      <button
+        type="button"
+        onClick={() => setSetupOpen((v) => !v)}
+        aria-expanded={setupOpen}
+        className="flex items-center justify-between rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        <span>Framework Setup</span>
+        <ChevronDown
+          className={cn("h-3.5 w-3.5 transition-transform", setupOpen && "rotate-180")}
+          aria-hidden="true"
+        />
+      </button>
+
+      {setupOpen &&
+        setupNavItems.map(({ to, label, icon: Icon }) => (
+          <Link
+            key={to}
+            to={to}
+            onClick={onNavigate}
+            className={linkClass}
+            activeProps={{ className: "bg-accent text-foreground" }}
+          >
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">{label}</span>
+          </Link>
+        ))}
+
+      <div className="my-2 border-t border-border" />
+
+      {secondaryNavItems.map(({ to, label, icon: Icon }) => (
+        <Link
+          key={to}
+          to={to}
+          onClick={onNavigate}
+          className={linkClass}
+          activeProps={{ className: "bg-accent text-foreground" }}
         >
           <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="truncate">{label}</span>
