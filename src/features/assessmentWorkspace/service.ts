@@ -17,7 +17,10 @@ export class AssessmentNotFoundError extends Error {
 const PRINCIPLE_EMBED =
   "principle:principles!fk_requirements_principle(id, code, display_name, sort_order, level:levels!fk_principles_level(id, code, display_name, sort_order))";
 
-const CRITERION_EMBED = `criterion:assessment_criteria!fk_responses_criterion(id, code, criterion_text, help_text, sort_order, requirement:requirements!fk_assessment_criteria_requirement(id, code, title, guidance, sort_order, ${PRINCIPLE_EMBED}))`;
+const CLAUSES_EMBED =
+  "clause_links:requirement_process_clauses!fk_rpc_requirement(process_clause:process_clauses!fk_rpc_process_clause(id, code, display_name, sort_order))";
+
+const CRITERION_EMBED = `criterion:assessment_criteria!fk_responses_criterion(id, code, criterion_text, help_text, sort_order, requirement:requirements!fk_assessment_criteria_requirement(id, code, title, guidance, sort_order, ${PRINCIPLE_EMBED}, ${CLAUSES_EMBED}))`;
 
 const ASSESSMENT_EMBED =
   "assessment:assessments!fk_responses_assessment(id, status, organization:organizations!fk_assessments_organization(name), framework_version:framework_versions!fk_assessments_framework_version(version_number, framework:frameworks!fk_framework_versions_framework(code, name)))";
@@ -39,11 +42,27 @@ type RawRow = {
       guidance: string | null;
       sort_order: number;
       principle: {
+        id: string;
         code: string | null;
         display_name: string;
         sort_order: number;
-        level: { code: string | null; display_name: string; sort_order: number } | null;
+        level: {
+          id: string;
+          code: string | null;
+          display_name: string;
+          sort_order: number;
+        } | null;
       } | null;
+      clause_links:
+        | Array<{
+            process_clause: {
+              id: string;
+              code: string | null;
+              display_name: string;
+              sort_order: number;
+            } | null;
+          }>
+        | null;
     } | null;
   } | null;
   assessment: {
@@ -94,12 +113,18 @@ export async function loadWorkspace(
         title: req.title,
         description: req.guidance ?? null,
         sort_order: req.sort_order ?? 0,
+        level_id: req.principle?.level?.id ?? null,
         level_code: req.principle?.level?.code ?? null,
         level_name: req.principle?.level?.display_name ?? "",
         level_sort: req.principle?.level?.sort_order ?? 0,
+        principle_id: req.principle?.id ?? null,
         principle_code: req.principle?.code ?? null,
         principle_name: req.principle?.display_name ?? "",
         principle_sort: req.principle?.sort_order ?? 0,
+        process_clauses: (req.clause_links ?? [])
+          .map((l) => l.process_clause)
+          .filter((c): c is NonNullable<typeof c> => Boolean(c))
+          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
         criteria: [],
       };
       byRequirement.set(req.id, entry);
