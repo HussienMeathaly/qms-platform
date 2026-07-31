@@ -334,6 +334,8 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<OrganizationRole>("org_admin");
+  const [password, setPassword] = useState(generatePassword());
+  const [createdContact, setCreatedContact] = useState<{ email: string; password: string } | null>(null);
 
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -351,6 +353,8 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
     setFullName("");
     setEmail("");
     setRole("org_admin");
+    setPassword(generatePassword());
+    setCreatedContact(null);
     setErrors({});
     setSubmitError(null);
   }, [open, organization]);
@@ -416,16 +420,15 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
               fullName: fullName.trim(),
               jobTitle: null,
               role,
+              password,
             },
           });
           if (res.tempPassword) {
-            toast.success("Organization and user created", {
-              description: `Temporary password for ${email.trim()}: ${res.tempPassword}`,
-              duration: 15000,
-            });
-          } else {
-            toast.success("Organization created and existing user linked");
+            setCreatedContact({ email: email.trim(), password: res.tempPassword });
+            toast.success("Organization and user created");
+            return; // keep dialog open so the credentials stay visible
           }
+          toast.success("Organization created and existing user linked");
         } finally {
           setCreatingUser(false);
         }
@@ -534,7 +537,22 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
 
           {isEdit && organization && <TeamSection organizationId={organization.id} />}
 
-          {!isEdit && (
+          {!isEdit && createdContact ? (
+            <>
+              <CredentialsPanel email={createdContact.email} password={createdContact.password} />
+              <div className="flex justify-end border-t border-border pt-4">
+                <button
+                  type="button"
+                  onClick={() => onOpenChange(false)}
+                  className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Done
+                </button>
+              </div>
+            </>
+          ) : null}
+
+          {!isEdit && !createdContact && (
             <section className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
               <label className="flex items-start gap-3">
                 <input
@@ -601,6 +619,32 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
                       ))}
                     </select>
                   </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label htmlFor="u-pass" className="text-xs font-medium text-foreground">
+                      Temporary password
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="u-pass"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={submitting}
+                        className={inputClass}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPassword(generatePassword())}
+                        disabled={submitting}
+                        aria-label="Generate password"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input text-foreground hover:bg-accent"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      The user signs in with this password and can reset it later.
+                    </p>
+                  </div>
                 </div>
               )}
             </section>
@@ -612,6 +656,7 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
             </div>
           )}
 
+          {!createdContact && (
           <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
             <button
               type="button"
@@ -630,6 +675,7 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
               {isEdit ? "Save changes" : "Create organization"}
             </button>
           </div>
+          )}
         </form>
       </div>
     </div>
