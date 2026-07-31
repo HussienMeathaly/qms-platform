@@ -370,6 +370,7 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
       if (!fullName.trim()) next.fullName = "Contact name is required.";
       if (!email.trim()) next.email = "Email is required.";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = "Enter a valid email address.";
+      if (password.trim().length < 8) next.email = next.email ?? "Temporary password must be at least 8 characters.";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
