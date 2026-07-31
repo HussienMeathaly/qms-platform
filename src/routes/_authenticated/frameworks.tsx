@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PlatformAdminOnly } from "@/features/auth/PlatformAdminOnly";
 import { FrameworksPage } from "../../pages/FrameworksPage";
 
 export const Route = createFileRoute("/_authenticated/frameworks")({
@@ -10,5 +11,9 @@ export const Route = createFileRoute("/_authenticated/frameworks")({
       { property: "og:description", content: "Manage assessment frameworks." },
     ],
   }),
-  component: FrameworksPage,
+  component: () => (
+    <PlatformAdminOnly>
+      <FrameworksPage />
+    </PlatformAdminOnly>
+  ),
 });

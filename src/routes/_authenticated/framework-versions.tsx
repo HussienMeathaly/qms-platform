@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PlatformAdminOnly } from "@/features/auth/PlatformAdminOnly";
 import { FrameworkVersionsPage } from "../../pages/FrameworkVersionsPage";
 
 export const Route = createFileRoute("/_authenticated/framework-versions")({
@@ -10,5 +11,9 @@ export const Route = createFileRoute("/_authenticated/framework-versions")({
       { property: "og:description", content: "Manage versions of assessment frameworks." },
     ],
   }),
-  component: FrameworkVersionsPage,
+  component: () => (
+    <PlatformAdminOnly>
+      <FrameworkVersionsPage />
+    </PlatformAdminOnly>
+  ),
 });

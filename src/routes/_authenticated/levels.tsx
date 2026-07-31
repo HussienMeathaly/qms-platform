@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PlatformAdminOnly } from "@/features/auth/PlatformAdminOnly";
 import { LevelsPage } from "../../pages/LevelsPage";
 
 export const Route = createFileRoute("/_authenticated/levels")({
@@ -10,5 +11,9 @@ export const Route = createFileRoute("/_authenticated/levels")({
       { property: "og:description", content: "Manage levels within framework versions." },
     ],
   }),
-  component: LevelsPage,
+  component: () => (
+    <PlatformAdminOnly>
+      <LevelsPage />
+    </PlatformAdminOnly>
+  ),
 });
