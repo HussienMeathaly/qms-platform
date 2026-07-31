@@ -475,6 +475,8 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }: Pro
             </div>
           </section>
 
+          {isEdit && organization && <TeamSection organizationId={organization.id} />}
+
           {!isEdit && (
             <section className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
               <label className="flex items-start gap-3">
