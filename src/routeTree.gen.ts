@@ -9,34 +9,30 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedAssessmentCriteriaRouteImport } from './routes/_authenticated/assessment-criteria'
-import { Route as AuthenticatedAssessmentsRouteImport } from './routes/_authenticated/assessments'
-import { Route as AuthenticatedFrameworkVersionsRouteImport } from './routes/_authenticated/framework-versions'
-import { Route as AuthenticatedFrameworksRouteImport } from './routes/_authenticated/frameworks'
-import { Route as AuthenticatedLevelsRouteImport } from './routes/_authenticated/levels'
-import { Route as AuthenticatedMyAssessmentsRouteImport } from './routes/_authenticated/my-assessments'
-import { Route as AuthenticatedOrganizationsRouteImport } from './routes/_authenticated/organizations'
-import { Route as AuthenticatedPrinciplesRouteImport } from './routes/_authenticated/principles'
-import { Route as AuthenticatedProcessClausesRouteImport } from './routes/_authenticated/process-clauses'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedRequirementsRouteImport } from './routes/_authenticated/requirements'
-import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated/reviews'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedReviewsRouteImport } from './routes/_authenticated/reviews'
+import { Route as AuthenticatedRequirementsRouteImport } from './routes/_authenticated/requirements'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedProcessClausesRouteImport } from './routes/_authenticated/process-clauses'
+import { Route as AuthenticatedPrinciplesRouteImport } from './routes/_authenticated/principles'
+import { Route as AuthenticatedOrganizationsRouteImport } from './routes/_authenticated/organizations'
+import { Route as AuthenticatedMyAssessmentsRouteImport } from './routes/_authenticated/my-assessments'
+import { Route as AuthenticatedLevelsRouteImport } from './routes/_authenticated/levels'
+import { Route as AuthenticatedFrameworksRouteImport } from './routes/_authenticated/frameworks'
+import { Route as AuthenticatedFrameworkVersionsRouteImport } from './routes/_authenticated/framework-versions'
+import { Route as AuthenticatedAssessmentsRouteImport } from './routes/_authenticated/assessments'
+import { Route as AuthenticatedAssessmentCriteriaRouteImport } from './routes/_authenticated/assessment-criteria'
 import { Route as AuthenticatedMyAssessmentsIndexRouteImport } from './routes/_authenticated/my-assessments.index'
 import { Route as AuthenticatedMyAssessmentsAssessmentIdRouteImport } from './routes/_authenticated/my-assessments.$assessmentId'
 
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const UnauthorizedRoute = UnauthorizedRouteImport.update({
+  id: '/unauthorized',
+  path: '/unauthorized',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -44,9 +40,13 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UnauthorizedRoute = UnauthorizedRouteImport.update({
-  id: '/unauthorized',
-  path: '/unauthorized',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -54,60 +54,14 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAssessmentCriteriaRoute =
-  AuthenticatedAssessmentCriteriaRouteImport.update({
-    id: '/assessment-criteria',
-    path: '/assessment-criteria',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAssessmentsRoute =
-  AuthenticatedAssessmentsRouteImport.update({
-    id: '/assessments',
-    path: '/assessments',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedFrameworkVersionsRoute =
-  AuthenticatedFrameworkVersionsRouteImport.update({
-    id: '/framework-versions',
-    path: '/framework-versions',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedFrameworksRoute = AuthenticatedFrameworksRouteImport.update({
-  id: '/frameworks',
-  path: '/frameworks',
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedLevelsRoute = AuthenticatedLevelsRouteImport.update({
-  id: '/levels',
-  path: '/levels',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMyAssessmentsRoute =
-  AuthenticatedMyAssessmentsRouteImport.update({
-    id: '/my-assessments',
-    path: '/my-assessments',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOrganizationsRoute =
-  AuthenticatedOrganizationsRouteImport.update({
-    id: '/organizations',
-    path: '/organizations',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPrinciplesRoute = AuthenticatedPrinciplesRouteImport.update({
-  id: '/principles',
-  path: '/principles',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProcessClausesRoute =
-  AuthenticatedProcessClausesRouteImport.update({
-    id: '/process-clauses',
-    path: '/process-clauses',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
+const AuthenticatedReviewsRoute = AuthenticatedReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRequirementsRoute =
@@ -116,16 +70,62 @@ const AuthenticatedRequirementsRoute =
     path: '/requirements',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedReviewsRoute = AuthenticatedReviewsRouteImport.update({
-  id: '/reviews',
-  path: '/reviews',
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const AuthenticatedProcessClausesRoute =
+  AuthenticatedProcessClausesRouteImport.update({
+    id: '/process-clauses',
+    path: '/process-clauses',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPrinciplesRoute = AuthenticatedPrinciplesRouteImport.update({
+  id: '/principles',
+  path: '/principles',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOrganizationsRoute =
+  AuthenticatedOrganizationsRouteImport.update({
+    id: '/organizations',
+    path: '/organizations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMyAssessmentsRoute =
+  AuthenticatedMyAssessmentsRouteImport.update({
+    id: '/my-assessments',
+    path: '/my-assessments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedLevelsRoute = AuthenticatedLevelsRouteImport.update({
+  id: '/levels',
+  path: '/levels',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFrameworksRoute = AuthenticatedFrameworksRouteImport.update({
+  id: '/frameworks',
+  path: '/frameworks',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFrameworkVersionsRoute =
+  AuthenticatedFrameworkVersionsRouteImport.update({
+    id: '/framework-versions',
+    path: '/framework-versions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAssessmentsRoute =
+  AuthenticatedAssessmentsRouteImport.update({
+    id: '/assessments',
+    path: '/assessments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAssessmentCriteriaRoute =
+  AuthenticatedAssessmentCriteriaRouteImport.update({
+    id: '/assessment-criteria',
+    path: '/assessment-criteria',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMyAssessmentsIndexRoute =
   AuthenticatedMyAssessmentsIndexRouteImport.update({
     id: '/',
@@ -278,18 +278,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/unauthorized': {
+      id: '/unauthorized'
+      path: '/unauthorized'
+      fullPath: '/unauthorized'
+      preLoaderRoute: typeof UnauthorizedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -299,11 +292,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/unauthorized': {
-      id: '/unauthorized'
-      path: '/unauthorized'
-      fullPath: '/unauthorized'
-      preLoaderRoute: typeof UnauthorizedRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -313,81 +313,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/assessment-criteria': {
-      id: '/_authenticated/assessment-criteria'
-      path: '/assessment-criteria'
-      fullPath: '/assessment-criteria'
-      preLoaderRoute: typeof AuthenticatedAssessmentCriteriaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/assessments': {
-      id: '/_authenticated/assessments'
-      path: '/assessments'
-      fullPath: '/assessments'
-      preLoaderRoute: typeof AuthenticatedAssessmentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/framework-versions': {
-      id: '/_authenticated/framework-versions'
-      path: '/framework-versions'
-      fullPath: '/framework-versions'
-      preLoaderRoute: typeof AuthenticatedFrameworkVersionsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/frameworks': {
-      id: '/_authenticated/frameworks'
-      path: '/frameworks'
-      fullPath: '/frameworks'
-      preLoaderRoute: typeof AuthenticatedFrameworksRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/levels': {
-      id: '/_authenticated/levels'
-      path: '/levels'
-      fullPath: '/levels'
-      preLoaderRoute: typeof AuthenticatedLevelsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/my-assessments': {
-      id: '/_authenticated/my-assessments'
-      path: '/my-assessments'
-      fullPath: '/my-assessments'
-      preLoaderRoute: typeof AuthenticatedMyAssessmentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/organizations': {
-      id: '/_authenticated/organizations'
-      path: '/organizations'
-      fullPath: '/organizations'
-      preLoaderRoute: typeof AuthenticatedOrganizationsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/principles': {
-      id: '/_authenticated/principles'
-      path: '/principles'
-      fullPath: '/principles'
-      preLoaderRoute: typeof AuthenticatedPrinciplesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/process-clauses': {
-      id: '/_authenticated/process-clauses'
-      path: '/process-clauses'
-      fullPath: '/process-clauses'
-      preLoaderRoute: typeof AuthenticatedProcessClausesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/requirements': {
-      id: '/_authenticated/requirements'
-      path: '/requirements'
-      fullPath: '/requirements'
-      preLoaderRoute: typeof AuthenticatedRequirementsRouteImport
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reviews': {
@@ -397,11 +327,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReviewsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+    '/_authenticated/requirements': {
+      id: '/_authenticated/requirements'
+      path: '/requirements'
+      fullPath: '/requirements'
+      preLoaderRoute: typeof AuthenticatedRequirementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/process-clauses': {
+      id: '/_authenticated/process-clauses'
+      path: '/process-clauses'
+      fullPath: '/process-clauses'
+      preLoaderRoute: typeof AuthenticatedProcessClausesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/principles': {
+      id: '/_authenticated/principles'
+      path: '/principles'
+      fullPath: '/principles'
+      preLoaderRoute: typeof AuthenticatedPrinciplesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/organizations': {
+      id: '/_authenticated/organizations'
+      path: '/organizations'
+      fullPath: '/organizations'
+      preLoaderRoute: typeof AuthenticatedOrganizationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-assessments': {
+      id: '/_authenticated/my-assessments'
+      path: '/my-assessments'
+      fullPath: '/my-assessments'
+      preLoaderRoute: typeof AuthenticatedMyAssessmentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/levels': {
+      id: '/_authenticated/levels'
+      path: '/levels'
+      fullPath: '/levels'
+      preLoaderRoute: typeof AuthenticatedLevelsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/frameworks': {
+      id: '/_authenticated/frameworks'
+      path: '/frameworks'
+      fullPath: '/frameworks'
+      preLoaderRoute: typeof AuthenticatedFrameworksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/framework-versions': {
+      id: '/_authenticated/framework-versions'
+      path: '/framework-versions'
+      fullPath: '/framework-versions'
+      preLoaderRoute: typeof AuthenticatedFrameworkVersionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assessments': {
+      id: '/_authenticated/assessments'
+      path: '/assessments'
+      fullPath: '/assessments'
+      preLoaderRoute: typeof AuthenticatedAssessmentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assessment-criteria': {
+      id: '/_authenticated/assessment-criteria'
+      path: '/assessment-criteria'
+      fullPath: '/assessment-criteria'
+      preLoaderRoute: typeof AuthenticatedAssessmentCriteriaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/my-assessments/': {
